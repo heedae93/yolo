@@ -1,0 +1,7 @@
+import multiprocessing
+bind = "0.0.0.0:5510"
+workers = max(2, multiprocessing.cpu_count() // 2)
+threads = 2
+timeout = 120
+accesslog = "-"
+errorlog = "-"

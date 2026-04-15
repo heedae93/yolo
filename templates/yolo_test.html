@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLO 이미지 분석</title>
+</head>
+<body>
+
+    <h1>YOLO 이미지 업로드 및 분석(JSON API)</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="imageInput" name="file" required>
+        <button type="submit">업로드 및 분석</button>
+    </form>
+    <div>
+        <h3>모델정보 : <div id="test_model"></div></h3>
+    </div>
+    <div id="resultContainer" style="margin-top: 20px;">
+        <h3>결과 이미지:</h3>
+        <img id="resultImage" style="max-width: 400px; display: none;" />
+        <h3>탐지 결과(JSON):</h3>
+        <pre id="resultText"></pre>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            const imageFile = document.getElementById('imageInput').files[0];
+            formData.append('file', imageFile);
+
+            try {
+                const response = await fetch('/predict_api/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                document.getElementById('resultImage').src = data.image_url;
+                document.getElementById('resultImage').style.display = 'block';
+                document.getElementById('resultText').textContent = JSON.stringify(data.predictions, null, 2);
+            } catch (error) {
+                alert('오류 발생: ' + error.message);
+            }
+        });
+
+        loadServerConfig();
+        async function loadServerConfig() {
+            try {
+            const res = await fetch("/api/get_config");
+            if (!res.ok) throw new Error("서버 응답 오류: " + res.status);
+            const cfg = await res.json();
+            console.log("서버에서 받은 설정:", cfg);
+
+            document.getElementById('test_model').innerHTML  = cfg.train.test_model ?? "";
+
+            } catch (err) {
+            console.warn("설정 불러오기 실패:", err);
+
+            }
+        }
+    </script>
+</body>
+</html>

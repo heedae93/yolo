@@ -1,0 +1,1204 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>Video -> Boxes Web</title>
+<style>
+body{font-family:system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Arial,sans-serif;max-width:1100px;margin:10px auto;padding:0 16px}
+.grid{display:grid;grid-template-columns:400px 1fr;gap:16px}
+.card{border:1px solid #ddd;border-radius:5px;padding:5px;margin:1px 0;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.btn{padding:8px 12px;border-radius:10px;border:1px solid #ccc;background:#f7f7f7;cursor:pointer}
+.btn2{padding:2px 6px;border-radius:10px;border:1px solid #ccc;background:#f7f7f7;cursor:pointer}
+.btn-primary2{background:#2563eb;color:#fff;border-color:#1d4ed8}
+.btn-primary{background:#2563eb;color:#fff;border-color:#1d4ed8}
+ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    padding-inline-start: 5px;
+    unicode-bidi: isolate;
+}
+li{list-style:none;margin:0;padding:8px;border-bottom:1px solid #eee;cursor:pointer}
+li:hover{background:#f5f8ff}
+li.active{background:#e7f0ff}
+.small{color:#666;font-size:12px}
+img#viewerImg{max-width:100%;border-radius:8px;border:1px solid #ddd}
+code{background:#f6f8fa;padding:1px 4px;border-radius:6px}
+
+.viewer-wrap{position:relative; max-width:100%}
+#viewerImg{max-width:100%; display:block}
+#overlayCanvas{position:absolute; left:0; top:0; pointer-events:none}
+.ctrls{display:flex; gap:8px; align-items:center; margin:8px 0}
+.badge{background:#eef; border:1px solid #99c; padding:2px 6px; border-radius:8px; font-size:12px}
+
+.thin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  table-layout: fixed;   /* 컬럼 폭 고정 */
+  border: 1px solid #ccc;
+}
+
+.thin-table th, .thin-table td {
+  border: 1px solid #e5e5e5;
+  padding: 6px 8px;
+  text-align: left;
+  white-space: nowrap;       /* 줄바꿈 금지 */
+  overflow: hidden;          /* 넘치는 부분 숨김 */
+  text-overflow: ellipsis;   /* ... 표시 */
+}
+.thin-table th:nth-child(1) { width: 30px; }
+.thin-table th:nth-child(2) { width: 120px; }
+.thin-table th:nth-child(3) { width: 60px; }
+.thin-table th:nth-child(4) { width: 120px; }
+.thin-table th:nth-child(5) { width: 40px; }
+.thin-table th:nth-child(6) { width: 40px; }
+
+.thin-table th {
+  background: #f8f8f8;
+  font-weight: 600;
+}
+
+.thin-table tr:hover {
+  background: #f0f7ff;
+}
+
+.btn2 {
+  padding: 4px 6px;
+  font-size: 12px;
+  margin-right: 4px;
+  cursor: pointer;
+}
+
+.selected-row {
+  background-color: #dceeff !important;
+}
+
+
+</style>
+</head>
+<body>
+<h2>데이터셋 구축</h2>
+<span>(동영상 업로드 → 바운딩박스 DB 저장 → 실시간 리스트/미리보기)</span>
+<div class="card">
+  <form id="uploadForm">
+    <input type="file" name="video" accept=".mp4,.mov,.avi,.mkv" required />
+    <button class="btn btn-primary" type="submit">업로드 & 처리 시작</button>
+  </form>
+  <div id="jobInfo" class="small"></div>
+</div>
+<div class="grid">
+<div class="card" id="log_view">
+  <h3>실행 상태 / 로그</h3>
+  <div id="statusBox" class="small"></div>
+  <pre id="logBox" style="max-height:240px;overflow:auto;background:#0b0b0b;color:#e5e5e5;padding:10px;border-radius:8px"></pre>
+</div>
+
+<div class="card">
+  <h3>JOB 목록 <span id="job_count"></span></h3>
+  <ul >
+    <table class="thin-table">
+      <thead>
+        <tr>
+          <th>프레임 개수</th>
+          <th>파일명</th>
+          <th>일시</th>
+          <th>JOB ID</th>
+          <th>재추출</th>
+          <th>삭제</th>
+        </tr>
+      </thead>
+      <tbody id="jobList"></tbody>
+    </table>
+  </ul>
+  <ul id="jobPageInd"></ul>
+</div>
+
+<div class="grid">
+  <div class="card">
+
+    <div class="card">
+      <h3>Frame 목록</h3>
+      <div class="small">job_id: <code id="jobIdLabel">-</code></div>
+      <ul >
+        <table class="thin-table" >
+          <thead>
+            <tr>
+              <th>위치</th>
+              <th>프레임 번호</th>
+              <th>박스 수</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="frameList"></tbody>
+        </table>
+      </ul>
+      <ul id="pageInd"></ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card" style="width: 600px;">
+      <h3>미리보기</h3>
+      <div class="ctrls">
+        <label><input type="checkbox" id="editToggle"> 박스 편집</label>
+        <button class="btn btn-primary" id="addBoxBtn" disabled>박스 추가</button>
+        <button class="btn btn-primary" id="saveBoxBtn" disabled>선택 박스 저장</button>
+        <span class="badge" id="editHint" style="display:none">드래그: 이동 · 모서리/중앙점: 리사이즈 · ESC: 선택 해제 · Delete: 삭제(선택)</span>
+      </div>
+      <div class="viewer-wrap">
+        <img id="viewerImg" src="" alt="preview"/>
+        <canvas id="overlayCanvas"></canvas>
+      </div>
+      <pre id="meta" class="small">(프레임을 선택하면 박스 정보가 표시됩니다)</pre>
+    </div>
+    <div class="card">
+      <h3>Bounding BOX 정보</h3>
+      <table id="boxList"  class="thin-table">
+        <colgroup>
+          <col style="width:50px;">   <!-- ID -->
+          <col style="width:100px;">  <!-- 유형 -->
+          <col style="width:30px;">   <!-- conf -->
+          <col style="width:50px;">   <!-- x1 -->
+          <col style="width:50px;">   <!-- y1 -->
+          <col style="width:50px;">   <!-- x2 -->
+          <col style="width:50px;">   <!-- y2 -->
+          <col style="width:120px;">  <!-- 액션 -->
+        </colgroup>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>유형</th>
+            <th>conf</th>
+            <th>x1</th>
+            <th>y1</th>
+            <th>x2</th>
+            <th>y2</th>
+           <th>액션</th>
+          </tr>
+        </thead>
+        <tbody id="boxTableBody"></tbody>
+      </table>
+      <div class="small" id="boxMsg"></div>
+  </div>
+</div>
+
+
+<script>
+let currentJob = null;
+let lastFrameId = 0;
+let pollTimer = null;
+
+const limit = 10;
+const plimit = 5;
+const frameList = document.getElementById('frameList');
+const pageInd = document.getElementById('pageInd');
+const jobList = document.getElementById('jobList');
+const boxList = document.getElementById('boxList');
+const job_count = document.getElementById('job_count');
+
+
+const jobPageInd = document.getElementById('jobPageInd');
+
+const meta = document.getElementById('meta');
+
+const boxTBody = document.getElementById('boxTableBody');
+const boxMsg   = document.getElementById('boxMsg');
+
+const viewerImg = document.getElementById('viewerImg');
+const overlay = document.getElementById('overlayCanvas');
+
+const editToggle= document.getElementById('editToggle');
+const saveBoxBtn= document.getElementById('saveBoxBtn');
+const editHint  = document.getElementById('editHint');
+
+var class_name = [
+  "person","bicycle","car","motorcycle","airplane","bus","train","truck","boat",
+  "traffic light","fire hydrant","stop sign","parking meter","bench",
+  "bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe",
+  "backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard",
+  "sports ball","kite","baseball bat","baseball glove","skateboard","surfboard",
+  "tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl",
+  "banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza",
+  "donut","cake","chair","couch","potted plant","bed","dining table","toilet",
+  "tv","laptop","mouse","remote","keyboard","cell phone","microwave","oven",
+  "toaster","sink","refrigerator","book","clock","vase","scissors",
+  "teddy bear","hair drier","toothbrush",
+  "chicken","guard dog","goat","puppy","cat","crocodile","tiger","foodbin"
+];
+
+class_name = [
+  "선택",
+  "bin_10l_rect",
+  "bin_20l_rect",
+  "bin_60l_rect",
+  "bin_120l_rect",
+  "content",
+  ];
+
+
+function makeClassSelect(selectedIdx) {
+
+  let html = `<select class="inp-cls" style="width:120px">`;
+
+  class_name.forEach((name, idx) => {
+    const selected = (idx == selectedIdx) ? "selected" : "";
+    html += `<option value="${idx}" ${selected}>${name}</option>`;
+  });
+
+  html += `</select>`;
+
+  return html;
+}
+
+let currentBoxes = [];
+let currentOrigSize = {w:0, h:0};
+let selectedFrameId = null;
+let selectedJobId = null;
+let selectedJobPage =0;
+let selectedId = null;
+let dragging = null;               // {mode:'move'|'resize', handle:'nw'|'n'... , start:{mx,my}, startBox:{...}}
+let editMode = false;
+
+// === 유틸 ===
+const clamp = (v, lo, hi)=> Math.max(lo, Math.min(hi, v));
+const toInt = (v)=> Number.isFinite(+v) ? (v|0) : 0;
+const addBoxBtn = document.getElementById('addBoxBtn');
+
+
+function highlightSelectedRow1(clickedRow) {
+  // 기존 선택된 행 제거
+  document.querySelectorAll('#jobList tr').forEach(row => {
+    row.classList.remove('selected-row');
+  });
+
+  // 클릭된 행만 선택
+  clickedRow.classList.add('selected-row');
+}
+
+function highlightSelectedRow2(clickedRow) {
+  // 기존 선택된 행 제거
+  document.querySelectorAll('#frameList tr').forEach(row => {
+    row.classList.remove('selected-row');
+  });
+
+  // 클릭된 행만 선택
+  clickedRow.classList.add('selected-row');
+}
+
+function highlightSelectedRowId(selected_id) {
+  document.querySelectorAll('#boxTableBody tr').forEach(row => {
+    // 먼저 전체에서 선택 제거
+    row.classList.remove('selected-row');
+
+    // dataset.id 값이 selected_id와 같은 경우만 선택 적용
+    if (row.dataset.id == selected_id) {
+      row.classList.add('selected-row');
+    }
+  });
+}
+
+
+// 편집 모드일 때만 활성화
+editToggle.addEventListener('change', ()=>{
+  editMode = editToggle.checked;
+  editHint.style.display = editMode ? '' : 'none';
+  overlay.style.pointerEvents = editMode ? 'auto' : 'none';
+  addBoxBtn.disabled = !editMode;
+  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+});
+
+// 박스 추가 버튼 클릭 시
+addBoxBtn.addEventListener('click', ()=>{
+  if(!editMode) return;
+  if(currentOrigSize.w===0 || currentOrigSize.h===0){
+    alert("프레임을 먼저 선택하세요.");
+    return;
+  }
+  // 기본 크기의 박스 (이미지 가운데 100x100)
+  const W = currentOrigSize.w, H = currentOrigSize.h;
+  const newBox = {
+
+    id: '', // 임시 ID
+    cls: '87',
+    conf: 1.0,
+    x1: Math.max(0, Math.floor(W/2 - 50)),
+    y1: Math.max(0, Math.floor(H/2 - 50)),
+    x2: Math.min(W, Math.floor(W/2 + 50)),
+    y2: Math.min(H, Math.floor(H/2 + 50)),
+    frame_id : selectedFrameId,
+  };
+  currentBoxes.push(newBox);
+  selectedId = newBox.id;
+  saveBoxBtn.disabled = false;
+  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, W, H);
+  renderBoxTable(currentBoxes);  // 테이블에도 반영
+});
+
+// 이미지 ↔ 화면 스케일 계산
+function computeLayout(imgEl){
+  const rect = imgEl.getBoundingClientRect();
+  const dispW = Math.round(rect.width || imgEl.clientWidth || imgEl.naturalWidth);
+  const dispH = Math.round(rect.height || imgEl.clientHeight || imgEl.naturalHeight);
+  const dpr = window.devicePixelRatio || 1;
+  const sx = dispW / currentOrigSize.w;
+  const sy = dispH / currentOrigSize.h;
+  return {dispW, dispH, dpr, sx, sy};
+}
+
+function screenToImage(x, y){
+  const {dispW, dispH, sx, sy} = computeLayout(viewerImg);
+  // overlayCanvas는 viewerImg 위에 같은 CSS 크기이므로, offset로 변환
+  const r = overlay.getBoundingClientRect();
+  const px = x - r.left;
+  const py = y - r.top;
+  return {ix: px / sx, iy: py / sy};
+}
+
+
+function renderBoxTable(boxes, frameMeta){
+  boxTBody.innerHTML = '';
+  if(!Array.isArray(boxes) || boxes.length === 0){
+    boxMsg.textContent = '박스가 없습니다.';
+    return;
+  }
+  boxMsg.textContent = '';
+
+  boxes.forEach(addBoxRow);
+}
+
+function addBoxRow(b){
+
+  const tr = document.createElement('tr');
+  tr.dataset.id = b.id;
+
+  tr.innerHTML = `
+    <td style="width:50px;">${b.id}</td>
+    <td>${makeClassSelect(b.cls)}</td>
+    <td><input class="inp-conf" type="number" step="0.01" value="${b.conf ?? ''}" style="width:50px;"></td>
+    <td><input class="inp-x1"   type="number" step="1"    value="${b.x1 ?? 0}" style="width:50px;"></td>
+    <td><input class="inp-y1"   type="number" step="1"    value="${b.y1 ?? 0}" style="width:50px;"></td>
+    <td><input class="inp-x2"   type="number" step="1"    value="${b.x2 ?? 0}" style="width:50px;"></td>
+    <td><input class="inp-y2"   type="number" step="1"    value="${b.y2 ?? 0}" style="width:50px;"></td>
+    <td style="width:150px;">
+      <button class="btn btn-primary btn-update" type="button">저장</button>
+      <button class="btn btn-primary btn-delete" type="button">삭제</button>
+    </td>
+  `;
+
+
+  boxTBody.appendChild(tr);
+}
+
+boxTBody.addEventListener('click', async (e)=>{
+
+if(!e.target.classList.contains('btn-update')) return;
+if(!confirm('저장하시겠습니까?')) return;
+
+const tr = e.target.closest('tr');
+const id = tr.dataset.id;
+
+const payload = {
+  cls : tr.querySelector('.inp-cls').value.trim(),
+  conf: (v=> Number.isFinite(v)? v : null)(parseFloat(tr.querySelector('.inp-conf').value)),
+  x1  : parseInt(tr.querySelector('.inp-x1').value,10),
+  y1  : parseInt(tr.querySelector('.inp-y1').value,10),
+  x2  : parseInt(tr.querySelector('.inp-x2').value,10),
+  y2  : parseInt(tr.querySelector('.inp-y2').value,10),
+  frame_id : selectedFrameId,
+};
+//alert(JSON.stringify(payload))
+try{
+   var call_url =`/api/box/${id}`;
+   if(id == '' )
+      call_url = '/api/box/insert';
+
+  const res = await fetch(call_url, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!res.ok){
+    const msg = await res.text();
+    alert('업데이트 실패: ' + msg);
+    return;
+  }
+  // 성공 UI
+  e.target.textContent = '저장됨';
+  setTimeout(()=> e.target.textContent = '저장', 900);
+
+  // 미리보기 오버레이 새로고침(있다면)
+  if (typeof selectFrame === 'function' && viewerImg?.src) {
+    // 현재 선택된 프레임 다시 로드(overlay cache bust)
+    const qs = new URL(viewerImg.src, location.origin);
+    viewerImg.src = qs.pathname + '?t=' + Date.now();
+  }
+}catch(err){
+  console.error(err);
+  alert('업데이트 중 에러: ' + err);
+}
+});
+
+// 행의 업데이트 버튼 처리(이벤트 위임)
+boxTBody.addEventListener('click', async (e)=>{
+
+  if(!e.target.classList.contains('btn-delete')) return;
+  if(!confirm('삭제하시겠습니까?')) return;
+
+  const tr = e.target.closest('tr');
+  const id = tr.dataset.id;
+
+  const payload = {
+    cls : tr.querySelector('.inp-cls').value.trim(),
+    conf: (v=> Number.isFinite(v)? v : null)(parseFloat(tr.querySelector('.inp-conf').value)),
+    x1  : parseInt(tr.querySelector('.inp-x1').value,10),
+    y1  : parseInt(tr.querySelector('.inp-y1').value,10),
+    x2  : parseInt(tr.querySelector('.inp-x2').value,10),
+    y2  : parseInt(tr.querySelector('.inp-y2').value,10),
+  };
+  //alert(JSON.stringify(payload))
+  try{
+    const res = await fetch(`/api/box/${id}/delete`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    if(!res.ok){
+      const msg = await res.text();
+      alert('업데이트 실패: ' + msg);
+      return;
+    }
+    // 성공 UI
+    e.target.textContent = '저장됨';
+    selectFrame(selectedFrameId)
+    setTimeout(()=> e.target.textContent = '업데이트', 900);
+
+    // 미리보기 오버레이 새로고침(있다면)
+    if (typeof selectFrame === 'function' && viewerImg?.src) {
+      // 현재 선택된 프레임 다시 로드(overlay cache bust)
+      const qs = new URL(viewerImg.src, location.origin);
+      viewerImg.src = qs.pathname + '?t=' + Date.now();
+    }
+  }catch(err){
+    console.error(err);
+    alert('업데이트 중 에러: ' + err);
+  }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const res = await fetch('/api/upload', { method:'POST', body: fd });
+  const data = await res.json();
+  if(data.error){ alert(data.error); return; }
+  currentJob = data.job_id;
+  lastFrameId = 0;
+  document.getElementById('jobIdLabel').textContent = currentJob;
+  document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
+  frameList.innerHTML = '';
+  viewerImg.src = '';
+  meta.textContent = '(프레임을 선택하면 박스 정보가 표시됩니다)';
+  startPolling();
+});
+
+function startPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer = setInterval(async ()=>{
+    if(!currentJob) return;
+    // 상태/로그
+    const sres = await fetch('/api/status/'+currentJob);
+    const stat = await sres.json();
+    document.getElementById('statusBox').textContent = '상태: ' + stat.status + ' (pid='+(stat.pid ?? 'N/A')+', rc='+(stat.returncode ?? 'N/A')+')';
+    const lres = await fetch('/api/log/'+currentJob+'?tail=200');
+    document.getElementById('logBox').textContent = await lres.text();
+
+
+    // 프레임 새로고침
+
+    const fres = await fetch('/api/frames?job_id='+currentJob+'&after='+lastFrameId+'&limit=100');
+    const arr = await fres.json();
+    if(Array.isArray(arr) && arr.length){
+      arr.forEach(addFrameItem);
+      lastFrameId = arr[arr.length-1].id;
+    }
+    if(['completed','failed'].includes(stat.status)){ clearInterval(pollTimer); }
+  }, 1200);
+}
+
+async function deleteFrame(id)
+{
+ //alert(job_id)
+ if(!confirm("삭제하시겠습니까? \n 소속된 박스가 모두 삭제됩니다."))
+  {
+    return ;
+  }
+  const sres = await fetch('/api/frame/'+id+'/delete');
+  const stat = await sres.json();
+
+  if(stat.ok)
+  {
+    alert("삭제되었습니다. "+stat.id);
+    getFrameList(selectedJobId,selectedJobPage);
+  }
+  else  alert("삭제 실패하였습니다.")
+}
+
+function addFrameItem(item) {
+  const tbody = document.getElementById('frameList');
+
+  const tr = document.createElement('tr');
+  tr.dataset.id = item.id;
+
+  // 행 클릭 시 프레임 선택
+  tr.onclick = () => selectFrame(item.id);
+  tr.addEventListener('click', () => {
+    highlightSelectedRow2(tr);
+    selectFrame(item.id);
+  });
+  tr.innerHTML = `
+    <td>${item.pos_desc}</td>
+    <td>${item.frame_index})${item.image_path.split(/(\\|\/)/g).pop()}</td>
+    <td>${item.box_count}개</td>
+    <td>
+      <button class="btn2 btn-primary delete-btn">삭제</button>
+    </td>
+  `;
+
+  // 삭제 버튼 이벤트 (행 클릭과 구분)
+  tr.querySelector('.delete-btn').addEventListener('click', (e) => {
+    e.stopPropagation(); // selectFrame 방지
+    deleteFrame(item.id);
+  });
+
+  tbody.appendChild(tr);
+}
+
+
+function addFrameItem2(item){
+  const li = document.createElement('li');
+  li.dataset.id = item.id;
+  li.innerHTML = `${item.pos_desc}] ${item.frame_index} 프레임 <span class="small">(박스:${item.box_count}개 )</span>`
+              +'<button class="btn2 btn-primary delete-btn" >삭제</button>'
+  ;
+  li.onclick = ()=> selectFrame(item.id);
+  li.querySelector('.delete-btn').addEventListener('click', (e)=>{
+    e.stopPropagation(); // selectFrame 실행 방지
+    deleteFrame(item.id);
+  });
+
+  frameList.appendChild(li);
+}
+
+async function selectFrame(frameId){
+  // 활성 표시
+  [...frameList.children].forEach(li => li.classList.toggle('active', li.dataset.id == frameId));
+  //alert(selectedFrameId +"====="+frameId)
+  selectedFrameId = frameId;
+  const res = await fetch('/api/frame/'+frameId);
+  const d = await res.json();
+
+  if(d.error){ alert(d.error); return; }
+  // 서버에서 그려준 오버레이 이미지로 교체(캐시 방지)
+  viewerImg.onload = () => {
+
+    currentBoxes = d.boxes || [];
+
+    currentOrigSize = {w: d.width, h: d.height};
+    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, d.width, d.height);
+    //drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, w, h);
+  };
+
+  viewerImg.src = d.overlay_url + '?t=' + Date.now();
+  viewerImg.alt =  d.overlay_url + '?t=' + Date.now();
+  const lines = [];
+  lines.push(d.overlay_url )
+  lines.push(`frame_id=${d.id}, index=${d.frame_index}, size=${d.width}x${d.height}`);
+  //boxList.innerHTML=''
+  d.boxes.forEach((b,i)=>{
+    lines.push(`[${i}] ${b.cls} conf=${(b.conf??0).toFixed(2)} box=(${b.x1},${b.y1},${b.x2},${b.y2})`);
+
+  });
+  renderBoxTable(d.boxes)
+  meta.textContent = lines.join('\n');
+
+  //const resb = await fetch('/api/boxes/'+frameId);
+  //const db = await res.json();
+
+}
+
+/*
+function addBoxItem(item){
+  const li = document.createElement('li');
+  li.dataset.id = item.id;
+  li.innerHTML = " <form action='/api/updataBoxes': ${item.id}  <span class='small'>("
+                  +item.frame_id+","+item.id
+                  ") </span> </form>";
+
+  boxList.appendChild(li);
+}
+*/
+
+async function  deleteJob(job_id)
+{
+  //alert(job_id)
+  if(!confirm("삭제하시겠습니까? \n프레임 및 박스가 모두 삭제됩니다."))
+  {
+    return ;
+  }
+  const sres = await fetch('/api/job/'+job_id+'/delete');
+  const stat = await sres.json();
+
+  if(stat.ok)
+  {
+    alert("삭제되었습니다.");
+    location.href="/data"
+  }
+  else  alert("삭제 실패하였습니다.")
+
+}
+
+function addJobItem(item){
+  const tr = document.createElement("tr");
+
+// 클릭 시 프레임 보기
+tr.onclick = () => getFrameList(item.job_id, 0);
+tr.addEventListener('click', () => {
+    highlightSelectedRow1(tr);
+    selectFrame(item.id);
+  });
+// 파일명
+const tdName = document.createElement("td");
+tdName.textContent = item.file_name;
+
+// TS
+const tdTs = document.createElement("td");
+tdTs.textContent = item.ts;
+
+// JOB ID
+const tdJobId = document.createElement("td");
+tdJobId.textContent = item.job_id;
+
+// 프레임 수
+const tdCount = document.createElement("td");
+tdCount.textContent = item.total_count;
+
+// 재추출 버튼
+const tdExtract = document.createElement("td");
+tdExtract.innerHTML = `
+  <button class="btn2 btn-primary" onclick="event.stopPropagation(); reExtract('${item.job_id}')">
+    재추출 [${item.ext_num}]
+  </button>
+`;
+
+// 삭제 버튼
+const tdDelete = document.createElement("td");
+tdDelete.innerHTML = `
+  <button class="btn2 btn-primary" onclick="event.stopPropagation(); deleteJob('${item.job_id}')">
+    삭제
+  </button>
+`;
+
+tr.appendChild(tdCount);
+tr.appendChild(tdName);
+tr.appendChild(tdTs);
+tr.appendChild(tdJobId);
+
+tr.appendChild(tdExtract);
+tr.appendChild(tdDelete);
+
+jobList.appendChild(tr);
+
+/*
+  const li = document.createElement('li');
+  li.dataset.id = item.id;
+  li.innerHTML = ` <span class="small">[${item.file_name}]/${item.ts} / [${item.job_id}] / 프레임수 (${item.total_count})</span>`
+  +'<button class="btn2 btn-primary"  onclick="reExtract(\''+item.job_id+'\')">재추출 ['+item.ext_num+']</button>'
+  +'<button class="btn2 btn-primary"  onclick="deleteJob(\''+item.job_id+'\')">삭제</button>'
+  ;
+  li.onclick = ()=> getFrameList(item.job_id,0);
+  jobList.appendChild(li);
+  */
+}
+
+async function  reExtract(job_id)
+{
+  try {
+    // 대기 커서로 변경
+    document.body.style.cursor = 'wait';
+
+    const sres = await fetch('/api/re_extract/' + job_id);
+    const stat = await sres.json();
+
+    alert(stat); // ← 기존 alert(val) 는 오류라 stat으로 수정
+  } catch (e) {
+    console.error(e);
+    alert('오류가 발생했습니다.');
+  } finally {
+    // 작업 완료 후 원래 커서로 복구
+    document.body.style.cursor = 'default';
+  }
+}
+
+async function getJobList2(page)
+{
+
+  jobList.innerHTML='';
+  jobPageInd.innerHTML='';
+
+  var job_id=-1
+  const res = await fetch('/api/get_job_cnt');
+  const val = await res.json();
+  const cnt = val.total_count;
+  const pageCnt = Math.round(cnt / limit) +1;
+  const numbers = Array.from({ length: pageCnt }, (_, i) => i );
+  // forEach 루프를 사용하여 각 숫자를 출력
+  numbers.forEach(number => {
+    const li = document.createElement('span');
+    if(page == number)
+    {
+      li.innerHTML = '<span class="">'+(number+1)+'</span>';
+    }
+    else {
+      li.innerHTML = '<span class="small">'+(number+1)+'</span>';
+      li.onclick = ()=> getJobList(number);
+    }
+    jobPageInd.appendChild(li)
+  });
+
+  const res2 = await fetch('/api/get_job_list?page='+page+'&limit='+limit);
+  const arr = await res2.json();
+  if(Array.isArray(arr) && arr.length){
+    arr.forEach(addJobItem);
+    if(job_id<0)
+      job_id = arr[arr.length-1].job_id;
+    lastFrameId = arr[arr.length-1].id;
+  }
+  if(job_id>0)
+    getFrameList(job_id, 0);
+
+
+}
+const jlimit =5
+async function getJobList(page)
+{
+  //alert("getFrameInfo "+ job_id)
+  jobList.innerHTML='';
+  jobPageInd.innerHTML='';
+
+  var job_id=-1
+  const res = await fetch('/api/get_job_cnt');
+  const val = await res.json();
+  const cnt = val.total_count;
+  job_count.innerHTML =" (총건수 :"+cnt+")"
+  const pageCnt = Math.round(cnt / jlimit) ;
+
+  const numbers = Array.from({ length: pageCnt }, (_, i) => i );
+  // forEach 루프를 사용하여 각 숫자를 출력
+  //맨처음으로
+
+  var vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [<<] </span>';
+  if(page>0)
+    vli.onclick = ()=> getJobList(0);
+    jobPageInd.appendChild(vli)
+ // 다음페이지로
+  vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [<] </span>';
+  var vpage = page
+  if(pageCnt - 1 > page && page >= 5)
+  {
+    vpage = vpage - plimit
+    vli.onclick = ()=> getJobList( vpage);
+  }
+  jobPageInd.appendChild(vli)
+
+  numbers.forEach(number => {
+    const li = document.createElement('span');
+    if(page == number)
+    {
+      li.innerHTML = '<span class="">'+(number+1)+'</span>';
+    }
+    else {
+      li.innerHTML = '<span class="small">['+(number+1)+']</span>';
+      li.onclick = ()=> getJobList(number);
+    }
+    jobPageInd.appendChild(li)
+  });
+
+
+ // 다음페이지로
+  vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [>] </span>';
+  var vpage = page
+  if(pageCnt - 1 > page)
+  {
+    vpage = vpage + plimit
+    vli.onclick = ()=> getJobList( vpage );
+  }
+  jobPageInd.appendChild(vli)
+
+  vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [>>] </span>';
+
+  var sPage = Math.trunc(pageCnt / plimit)
+  if(page < sPage * plimit)
+    vli.onclick = ()=> getJobList( (sPage-1) * plimit);
+  jobPageInd.appendChild(vli)
+
+  const res2 = await fetch('/api/get_job_list?page='+page+'&limit='+jlimit);
+  const arr = await res2.json();
+  if(Array.isArray(arr) && arr.length){
+    arr.forEach(addJobItem);
+    if(job_id<0)
+      job_id = arr[arr.length-1].job_id;
+    lastFrameId = arr[arr.length-1].id;
+  }
+  if(job_id>0)
+    getFrameList(job_id, 0 );
+}
+
+async function getFrameList(job_id, page)
+{
+  //alert("get page   ---> "+page);
+  selectedJobId = job_id
+  selectedJobPage = page
+  pageInd.innerHTML=''
+  frameList.innerHTML=''
+  jobIdLabel.innerHTML=job_id
+  const res = await fetch('/api/get_frame_cnt?job_id='+job_id);
+  const val = await res.json();
+  //alert(JSON.stringify(val))
+  const cnt = val.total_count;
+  jobIdLabel.innerHTML=job_id +"<br> 프레임수 "+cnt
+  var pageCnt = Math.trunc(cnt / limit);
+  // limit는 표시하는 갯수
+  if(cnt%limit != 0) pageCnt = pageCnt +1;
+
+  const numbers = Array.from({ length: pageCnt }, (_, i) => i );
+  // forEach 루프를 사용하여 각 숫자를 출력
+  //맨처음으로
+  var vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [<<] </span>';
+  if(page>0)
+    vli.onclick = ()=> getFrameList(job_id, 0);
+  pageInd.appendChild(vli)
+ // 다음페이지로
+  vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [<] </span>';
+  var vpage = page;
+  var vpage1=page
+
+  if(pageCnt - 1 > page && page >= plimit)
+  {
+    vpage1 = page - plimit ;
+    // 주의사항 : 변수는 onclick에 매핑시키면 아래에서 변하면 같이 변하므로 다르게 주어야함
+    vli.onclick = ()=> getFrameList(job_id, vpage1);
+  }
+  pageInd.appendChild(vli)
+
+  numbers.forEach(number => {
+
+    if(  Math.trunc(page/plimit)*plimit <= number && number < (Math.trunc(page/plimit)+1)*plimit  )
+    {
+      const li = document.createElement('span');
+      if(page == number)
+      {
+        li.innerHTML = '<span class="">'+(number+1)+'</span>';
+      }
+      else {
+        li.innerHTML = ' <span class="small" >['+(number+1)+']</span>';
+        li.onclick = ()=> getFrameList(job_id, number);
+      }
+      pageInd.appendChild(li)
+    }
+  });
+
+  const fres = await fetch('/api/frames_all?job_id='+job_id+'&page='+page+'&limit='+limit);
+  const arr = await fres.json();
+  if(Array.isArray(arr) && arr.length){
+    arr.forEach(addFrameItem);
+    lastFrameId = arr[arr.length-1].id;
+  }
+
+ // 다음페이지로
+  vli2 = document.createElement('span');
+  vli2.innerHTML = ' <span class="small" > [>] </span>';
+  var vpage = page;
+
+  if(pageCnt - 1 > page)
+  {
+    vpage = page + plimit;
+    vli2.onclick = ()=> getFrameList(job_id, vpage);
+  }
+  pageInd.appendChild(vli2)
+  vli = document.createElement('span');
+  vli.innerHTML = ' <span class="small" > [>>] </span>';
+
+  var sPage = Math.trunc(pageCnt / plimit)
+  if( sPage > 0)
+  {
+    vli.onclick = ()=> getFrameList(job_id,(sPage-1)*plimit);
+  }
+  pageInd.appendChild(vli)
+
+
+}
+
+async function init()
+{
+  var job_id = getJobList(0);
+}
+
+
+// === 렌더: 박스 + 선택 강조 + 리사이즈 핸들 ===
+function drawBoxesOnCanvas(imgEl, canvasEl, boxes, origW, origH){
+  const {dispW, dispH, dpr, sx, sy} = computeLayout(imgEl);
+
+  canvasEl.style.width = dispW + 'px';
+  canvasEl.style.height = dispH + 'px';
+  canvasEl.width  = Math.max(1, Math.round(dispW * dpr));
+  canvasEl.height = Math.max(1, Math.round(dispH * dpr));
+
+  const ctx = canvasEl.getContext('2d');
+  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
+
+  const drawOne = (b, highlight=false)=>{
+    const x  = Math.round(b.x1 * sx) * dpr;
+    const y  = Math.round(b.y1 * sy) * dpr;
+    const w  = Math.round((b.x2 - b.x1) * sx) * dpr;
+    const h  = Math.round((b.y2 - b.y1) * sy) * dpr;
+
+    ctx.lineWidth = (highlight? 3:2) * dpr;
+    ctx.strokeStyle = highlight ? '#00e676' : '#ff3b30';
+    ctx.strokeRect(x,y,w,h);
+
+    // 라벨
+    const label = `${b.cls ?? ''} ${(b.conf ?? 0).toFixed(2)} (${Math.round(x)},${Math.round(y)}) (${Math.round(x+w)},${Math.round(y+h)})`;
+    ctx.font = `${12*dpr}px system-ui, -apple-system, Segoe UI, Roboto`;
+    const tw = ctx.measureText(label).width + 6*dpr;
+    const th = 16*dpr;
+    const tx = x; const ty = Math.max(0, y - th - 2*dpr);
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(tx, ty, tw, th);
+    ctx.fillStyle = '#fff'; ctx.fillText(label, tx + 3*dpr, ty + th - 4*dpr);
+
+    // 편집 모드면 핸들 표시(8개: 모서리4 + 변중앙4)
+    if(editMode){
+
+
+      const handleSize = 7 * dpr;
+      const centers = [
+        [x,y,'nw'], [x+w,y,'ne'], [x,y+h,'sw'], [x+w,y+h,'se'],
+        [x+w/2,y,'n'], [x+w/2,y+h,'s'], [x,y+h/2,'w'], [x+w,y+h/2,'e']
+      ];
+      ctx.fillStyle = highlight ? '#00e676' : '#ff3b30';
+
+      centers.forEach(([cx,cy,key])=>{
+        ctx.fillRect(cx-handleSize/2, cy-handleSize/2, handleSize, handleSize);
+      });
+    }
+  };
+
+  // 선택 박스를 맨 위로
+  const sorted = [...boxes].sort((a,b)=> (a.id===selectedId)-(b.id===selectedId));
+  sorted.forEach(b=> drawOne(b, b.id===selectedId));
+  highlightSelectedRowId(selectedId)
+}
+
+// === 히트테스트 ===
+function hitTest(mx, my){
+  if(!editMode) return null;
+  const {dpr, sx, sy} = computeLayout(viewerImg);
+  // 상단에 보이는 상자를 우선(마지막 그린 = 선택된 것)
+  const boxes = [...currentBoxes].sort((a,b)=> (a.id===selectedId)-(b.id===selectedId));
+  for(let i=boxes.length-1;i>=0;--i){
+    const b = boxes[i];
+    const x  = b.x1 * sx, y = b.y1 * sy;
+    const w  = (b.x2-b.x1) * sx, h = (b.y2-b.y1) * sy;
+    const r = overlay.getBoundingClientRect();
+    const px = mx - r.left, py = my - r.top;
+
+    // 핸들 크기
+    const hs = 7; // CSS px(화면 단위)
+    const handles = [
+      {k:'nw', x:x, y:y},
+      {k:'ne', x:x+w, y:y},
+      {k:'sw', x:x, y:y+h},
+      {k:'se', x:x+w, y:y+h},
+      {k:'n',  x:x+w/2, y:y},
+      {k:'s',  x:x+w/2, y:y+h},
+      {k:'w',  x:x, y:y+h/2},
+      {k:'e',  x:x+w, y:y+h/2}
+    ];
+    for(const hdl of handles){
+      if(Math.abs(px - hdl.x) <= hs && Math.abs(py - hdl.y) <= hs){
+        return {type:'handle', id:b.id, handle: hdl.k};
+      }
+    }
+    // 박스 내부
+    if(px>=x && py>=y && px<=x+w && py<=y+h){
+      return {type:'box', id:b.id};
+    }
+  }
+  return null;
+}
+
+// === 마우스 이벤트 ===
+overlay.addEventListener('mousedown', (e)=>{
+  if(!editMode) return;
+  const hit = hitTest(e.clientX, e.clientY);
+  if(!hit){
+    selectedId = null;
+    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+    saveBoxBtn.disabled = true;
+    return;
+  }
+  selectedId = hit.id;
+  const sel = currentBoxes.find(b=> String(b.id)===String(selectedId));
+  const {ix, iy} = screenToImage(e.clientX, e.clientY);
+
+  if(hit.type==='handle'){
+    dragging = {
+      mode:'resize',
+      handle: hit.handle,
+      start:{mx:e.clientX, my:e.clientY, ix, iy},
+      startBox: {...sel}
+    };
+  }else{
+    dragging = {
+      mode:'move',
+      start:{mx:e.clientX, my:e.clientY, ix, iy},
+      startBox: {...sel}
+    };
+  }
+  saveBoxBtn.disabled = false;
+  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+});
+
+window.addEventListener('mousemove', (e)=>{
+  if(!editMode || !dragging || selectedId==null) return;
+  const sel = currentBoxes.find(b=> String(b.id)===String(selectedId));
+  if(!sel) return;
+
+  const {ix, iy} = screenToImage(e.clientX, e.clientY);
+  const minSize = 4; // px in image coords
+  const W = currentOrigSize.w, H = currentOrigSize.h;
+
+  if(dragging.mode==='move'){
+    const dx = ix - dragging.start.ix;
+    const dy = iy - dragging.start.iy;
+    let nx1 = dragging.startBox.x1 + dx;
+    let ny1 = dragging.startBox.y1 + dy;
+    let nx2 = dragging.startBox.x2 + dx;
+    let ny2 = dragging.startBox.y2 + dy;
+    // 경계 클램프
+    const bw = nx2-nx1, bh = ny2-ny1;
+    nx1 = clamp(nx1, 0, W-bw); ny1 = clamp(ny1, 0, H-bh);
+    nx2 = nx1 + bw;           ny2 = ny1 + bh;
+    Object.assign(sel, {x1:toInt(nx1), y1:toInt(ny1), x2:toInt(nx2), y2:toInt(ny2)});
+  }else{ // resize
+    let {x1,y1,x2,y2} = dragging.startBox;
+    let tx = ix, ty = iy;
+    switch(dragging.handle){
+      case 'nw': x1=tx; y1=ty; break;
+      case 'ne': x2=tx; y1=ty; break;
+      case 'sw': x1=tx; y2=ty; break;
+      case 'se': x2=tx; y2=ty; break;
+      case 'n' : y1=ty; break;
+      case 's' : y2=ty; break;
+      case 'w' : x1=tx; break;
+      case 'e' : x2=tx; break;
+    }
+    // 정렬/클램프/최소크기
+    x1 = clamp(Math.min(x1,x2), 0, W-1);
+    y1 = clamp(Math.min(y1,y2), 0, H-1);
+    x2 = clamp(Math.max(x1+minSize, Math.max(x1,x2)), 1, W);
+    y2 = clamp(Math.max(y1+minSize, Math.max(y1,y2)), 1, H);
+    Object.assign(sel, {x1:toInt(x1), y1:toInt(y1), x2:toInt(x2), y2:toInt(y2)});
+  }
+  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+});
+
+window.addEventListener('mouseup', ()=>{
+  if(!editMode) return;
+  dragging = null;
+});
+
+// 키보드: ESC 선택 해제, Delete 삭제(선택)
+window.addEventListener('keydown', (e)=>{
+  if(!editMode) return;
+  if(e.key==='Escape'){
+    selectedId = null; dragging = null;
+    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+    saveBoxBtn.disabled = true;
+  }
+  if(e.key==='Delete' && selectedId!=null){
+    const idx = currentBoxes.findIndex(b=> String(b.id)===String(selectedId));
+    if(idx>=0){
+      // 화면에서만 제거(서버 삭제는 별도 API 필요)
+      currentBoxes.splice(idx,1);
+      selectedId = null; dragging=null;
+      drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+      saveBoxBtn.disabled = true;
+    }
+  }
+});
+
+// 편집 토글
+editToggle.addEventListener('change', ()=>{
+  editMode = editToggle.checked;
+  editHint.style.display = editMode ? '' : 'none';
+  overlay.style.pointerEvents = editMode ? 'auto' : 'none';
+  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+});
+
+// 선택 박스 저장(PATCH)
+saveBoxBtn.addEventListener('click', async ()=>{
+  if(selectedId==null) return;
+  const b = currentBoxes.find(v=> String(v.id)===String(selectedId));
+  if(!b) return;
+  var res ;
+  //alert(JSON.stringify(b))
+  try{
+    if(b.id == '')
+    {
+      res = await fetch(`/api/box/insert`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({frame_id : selectedFrameId, conf : 0.0, cls : b.cls, x1:b.x1, y1:b.y1, x2:b.x2, y2:b.y2 })
+      });
+    }
+    else
+      res = await fetch(`/api/box/${b.id}`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ x1:b.x1, y1:b.y1, x2:b.x2, y2:b.y2 })
+      });
+    if(!res.ok){
+      alert('저장 실패: '+ await res.text());
+      return;
+    }
+    saveBoxBtn.textContent = '저장됨';
+    //alert('저장됨..............')
+    selectFrame(selectedFrameId)
+    //alert('프레임 재 로드.............')
+    setTimeout(()=> saveBoxBtn.textContent='선택 박스 저장', 900);
+  }catch(err){
+    console.error(err);
+    alert('저장 에러: '+ err);
+  }
+});
+
+// 창 크기 변경 시 다시 그림(반응형)
+window.addEventListener('resize', ()=>{
+  if(currentBoxes.length && currentOrigSize.w>0){
+    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+  }
+});
+
+
+
+init()
+</script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>컬렉션 카드·스토리 뷰 예제 (컬러 버전)</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --card:#ffffff; --text:#222; --muted:#777; --primary:#2563eb;
+  }
+  body{margin:0;font-family:system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,sans-serif;background:var(--bg)}
+  .wrap{max-width:1000px;margin:0 auto;padding:20px}
+  header{padding:20px 0;border-bottom:1px solid #ddd}
+  header h1{margin:0;font-size:24px}
+  header p{margin:4px 0 0;color:var(--muted)}
+  .toolbar{margin:16px 0}
+  .btn{padding:8px 12px;margin-right:8px;border:1px solid #ccc;background:#fff;cursor:pointer;border-radius:8px}
+  .btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  /* 카드 그리드 */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid #ddd;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05)}
+  .media{height:160px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;font-weight:bold}
+  .media.blue{background:#3b82f6}
+  .media.green{background:#10b981}
+  .media.red{background:#ef4444}
+  .media.purple{background:#8b5cf6}
+  .media.orange{background:#f97316}
+  .media.gray{background:#6b7280}
+  .body{padding:14px}
+  .title{margin:0;font-size:16px;color:var(--text)}
+  .desc{margin:6px 0 10px;font-size:13px;color:var(--muted)}
+
+  /* 스토리(타임라인) */
+  .timeline{display:none;position:relative;margin:20px 0;padding-left:20px}
+  .timeline::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:#ddd}
+  .t-item{margin-bottom:20px;position:relative}
+  .t-item::before{content:"";position:absolute;left:0;top:5px;width:14px;height:14px;border-radius:50%;background:var(--primary)}
+  .t-item h3{margin:0 0 6px;font-size:15px;color:var(--text)}
+  .t-item p{margin:0;font-size:13px;color:var(--muted)}
+  .t-media{margin-top:10px;height:120px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold}
+  .t-media.blue{background:#3b82f6}
+  .t-media.green{background:#10b981}
+  .t-media.red{background:#ef4444}
+  .t-media.purple{background:#8b5cf6}
+</style>
+</head>
+<body>
+  <header class="wrap">
+    <h1>컬렉션: 2024 서울 독서주간 아카이브</h1>
+    <p>포스터 · 강연영상 · 발표자료 · 참가자 아카이브를 카드형 & 스토리형으로 탐색</p>
+  </header>
+
+  <main class="wrap">
+    <div class="toolbar">
+      <button class="btn active" id="btnGrid">카드 보기</button>
+      <button class="btn" id="btnStory">스토리 보기</button>
+    </div>
+
+    <!-- 카드 보기 -->
+    <section id="grid" class="grid">
+      <article class="card">
+        <div class="media blue">포스터</div>
+        <div class="body">
+          <h2 class="title">독서주간 홍보 포스터</h2>
+          <p class="desc">2024 서울 독서주간을 알리는 공식 포스터.</p>
+        </div>
+      </article>
+      <article class="card">
+        <div class="media green">영상</div>
+        <div class="body">
+          <h2 class="title">개막 기념 강연 영상</h2>
+          <p class="desc">개막식 기조연설 풀영상 (30분).</p>
+        </div>
+      </article>
+      <article class="card">
+        <div class="media red">문서</div>
+        <div class="body">
+          <h2 class="title">강연 발표자료 (PPTX)</h2>
+          <p class="desc">기조연설자의 발표자료.</p>
+        </div>
+      </article>
+      <article class="card">
+        <div class="media purple">PDF</div>
+        <div class="body">
+          <h2 class="title">참가자 수기 모음집</h2>
+          <p class="desc">참가 시민의 독서 경험담을 모은 아카이브 북.</p>
+        </div>
+      </article>
+      <article class="card">
+        <div class="media orange">사진</div>
+        <div class="body">
+          <h2 class="title">행사 스냅 사진</h2>
+          <p class="desc">행사 현장 사진 모음집 (80컷).</p>
+        </div>
+      </article>
+      <article class="card">
+        <div class="media gray">3D</div>
+        <div class="body">
+          <h2 class="title">기념 배지 3D 스캔</h2>
+          <p class="desc">행사 기념 배지 3D 파일(OBJ/GLB).</p>
+        </div>
+      </article>
+    </section>
+
+    <!-- 스토리 보기 -->
+    <section id="story" class="timeline">
+      <div class="t-item">
+        <h3>① 준비: 홍보물 제작</h3>
+        <p>행사 브랜딩 및 포스터 배포</p>
+        <div class="t-media blue">포스터</div>
+      </div>
+      <div class="t-item">
+        <h3>② 오프닝: 개막 기념 강연</h3>
+        <p>기조연설 및 영상 기록</p>
+        <div class="t-media green">영상</div>
+      </div>
+      <div class="t-item">
+        <h3>③ 공유: 발표자료 공개</h3>
+        <p>PPTX 및 PDF 자료 제공</p>
+        <div class="t-media red">문서</div>
+      </div>
+      <div class="t-item">
+        <h3>④ 기록: 참가자 수기집</h3>
+        <p>참가자의 경험담 기록</p>
+        <div class="t-media purple">PDF</div>
+      </div>
+    </section>
+  </main>
+
+<script>
+  const btnGrid=document.getElementById('btnGrid');
+  const btnStory=document.getElementById('btnStory');
+  const grid=document.getElementById('grid');
+  const story=document.getElementById('story');
+  btnGrid.addEventListener('click',()=>{
+    grid.style.display='grid'; story.style.display='none';
+    btnGrid.classList.add('active'); btnStory.classList.remove('active');
+  });
+  btnStory.addEventListener('click',()=>{
+    grid.style.display='none'; story.style.display='block';
+    btnStory.classList.add('active'); btnGrid.classList.remove('active');
+  });
+</script>
+</body>
+</html>

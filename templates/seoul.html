@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>서울 아카이브 통합포털 – 홈(UI 예시)</title>
+  <style>
+    :root{
+      --bg:#ffffff; --text:#111827; --muted:#6b7280; --primary:#2563eb; --primary-600:#1d4ed8; --primary-700:#1e40af;
+      --surface:#f8fafc; --card:#ffffff; --border:#e5e7eb; --accent:#f1f5f9;
+      --success:#16a34a; --warning:#d97706; --danger:#dc2626;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Apple SD Gothic Neo, Noto Sans KR, sans-serif; color:var(--text); background:var(--bg)}
+    a{color:inherit; text-decoration:none}
+    img{max-width:100%; display:block}
+    .container{max-width:1200px; margin:0 auto; padding:0 20px}
+
+    /* Header */
+    header{position:sticky; top:0; z-index:30; background:rgba(255,255,255,.8); backdrop-filter:saturate(120%) blur(10px); border-bottom:1px solid var(--border)}
+    .head{display:flex; align-items:center; justify-content:space-between; height:64px}
+    .logo{display:flex; gap:10px; align-items:center; font-weight:800; letter-spacing:-.2px}
+    .logo svg{width:28px; height:28px}
+    nav ul{display:flex; gap:18px; list-style:none; padding:0; margin:0}
+    nav a{padding:8px 10px; border-radius:10px}
+    nav a.active, nav a:hover{background:var(--accent)}
+    .head-cta{display:flex; gap:10px; align-items:center}
+    .btn{display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--border); background:#fff; border-radius:12px; cursor:pointer}
+    .btn.primary{background:var(--primary); color:#fff; border-color:var(--primary-600)}
+    .btn.primary:hover{background:var(--primary-600)}
+
+    /* Mobile nav */
+    .menu-btn{display:none}
+    @media (max-width: 980px){
+      nav{display:none}
+      .menu-btn{display:inline-flex}
+    }
+
+    /* Hero Search */
+    .hero{padding:40px 0 24px; background:linear-gradient(180deg, #f8fbff 0%, #fff 100%); border-bottom:1px solid var(--border)}
+    .hero-grid{display:grid; grid-template-columns: 1.2fr .8fr; gap:24px}
+    @media (max-width: 980px){.hero-grid{grid-template-columns: 1fr}}
+    .search-card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:0 6px 24px rgba(37,99,235,.06)}
+    .search-title{font-size:20px; font-weight:700; margin:0 0 6px}
+    .search-desc{color:var(--muted); font-size:14px; margin:0 0 14px}
+    .search-row{display:flex; gap:10px; flex-wrap:wrap}
+    .input{flex:1; min-width:220px; height:44px; padding:0 12px; border:1px solid var(--border); border-radius:12px; font-size:15px}
+    .select{height:44px; padding:0 12px; border:1px solid var(--border); border-radius:12px; background:#fff; font-size:15px}
+    .chips{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    .chip{padding:6px 10px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px; cursor:pointer}
+    .chip:hover{filter:brightness(.96)}
+
+    .side-card{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px}
+    .side-title{font-weight:700; margin-bottom:12px}
+    .quick-links{display:grid; grid-template-columns: 1fr 1fr; gap:10px}
+    .quick{border:1px solid var(--border); border-radius:12px; padding:12px; display:flex; gap:10px; align-items:center; background:#fff}
+    .quick .ico{width:28px; height:28px; border-radius:8px; background:#eef2ff; display:grid; place-items:center}
+
+    /* Sections */
+    section{padding:26px 0}
+    .section-head{display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:14px}
+    .section-title{font-size:18px; font-weight:800}
+    .section-desc{color:var(--muted); font-size:14px}
+
+    /* Collections scroller */
+    .scroll-wrap{position:relative}
+    .hscroll{display:flex; gap:14px; overflow:auto; scroll-snap-type:x mandatory; padding-bottom:6px}
+    .card-col{min-width:260px; scroll-snap-align:start; background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden}
+    .card-col .cover{height:120px; background:linear-gradient(120deg,#c7d2fe,#dbeafe)}
+    .card-col .body{padding:12px}
+    .meta{font-size:12px; color:var(--muted)}
+
+    /* Latest items grid */
+    .grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:14px}
+    @media (max-width: 1080px){.grid{grid-template-columns: repeat(3, 1fr)}}
+    @media (max-width: 780px){.grid{grid-template-columns: repeat(2, 1fr)}}
+    @media (max-width: 520px){.grid{grid-template-columns: 1fr}}
+    .card-item{background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden}
+    .thumb{aspect-ratio: 16/9; background:#e5e7eb}
+    .card-item .body{padding:10px}
+    .badge{display:inline-block; font-size:11px; color:#374151; background:#e5e7eb; padding:3px 8px; border-radius:999px}
+
+    /* Notices */
+    .notices{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:12px}
+    .notices ul{margin:0; padding:0; list-style:none}
+    .notices li{display:flex; gap:8px; padding:8px 6px; border-bottom:1px dashed var(--border)}
+    .notices li:last-child{border-bottom:none}
+    .note-date{font-variant-numeric:tabular-nums; color:var(--muted); min-width:84px}
+
+    /* CTA banners */
+    .banner{border:1px solid var(--border); border-radius:16px; padding:16px; background:linear-gradient(90deg,#eff6ff,#ffffff)}
+
+    /* Footer */
+    footer{border-top:1px solid var(--border); background:#fff; margin-top:18px}
+    .foot{display:grid; grid-template-columns: 1fr auto; gap:18px; padding:18px 0; color:var(--muted)}
+    .foot small{display:block}
+
+    /* Helpers */
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container head">
+    <div class="logo" aria-label="서울 아카이브 포털">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" stroke="#2563eb" stroke-width="1.5"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke="#2563eb" stroke-width="1.5"/></svg>
+      <span>서울 아카이브</span>
+    </div>
+    <nav aria-label="주요 메뉴">
+      <ul>
+        <li><a href="#section-search" class="active">검색/열람</a></li>
+        <li><a href="#section-cs">민원신청</a></li>
+        <li><a href="#section-collections">컬렉션</a></li>
+        <li><a href="#section-donation">납본/기증</a></li>
+        <li><a href="#section-notice">공지사항</a></li>
+        <li><a href="#section-my">마이페이지</a></li>
+      </ul>
+    </nav>
+    <div class="head-cta">
+      <button class="btn" aria-label="접근성 도움말" title="접근성 도움말">도움말</button>
+      <button class="btn primary menu-btn" id="menuToggle" aria-expanded="false" aria-controls="mobileMenu">메뉴</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Hero / Search -->
+  <section class="hero" id="section-search">
+    <div class="container hero-grid">
+      <div class="search-card" role="search">
+        <h1 class="search-title">무엇을 찾고 계신가요?</h1>
+        <p class="search-desc">문서, 이미지, 영상, 음원, 3D 오브젝트까지 한 번에 검색하세요.</p>
+        <form id="searchForm" class="search-row" action="#" onsubmit="return false;">
+          <label class="sr-only" for="q">검색어</label>
+          <input id="q" class="input" type="search" placeholder="예) 서울 올림픽, 남산, 공연 영상" />
+          <label class="sr-only" for="type">자료유형</label>
+          <select id="type" class="select">
+            <option value="all">전체</option>
+            <option value="text">문서</option>
+            <option value="image">이미지</option>
+            <option value="video">동영상</option>
+            <option value="audio">음원</option>
+            <option value="3d">3D</option>
+          </select>
+          <button class="btn primary" type="submit">통합검색</button>
+        </form>
+        <div class="chips" aria-label="빠른 태그">
+          <button class="chip" data-chip="서울학">#서울학</button>
+          <button class="chip" data-chip="근현대사">#근현대사</button>
+          <button class="chip" data-chip="공연예술">#공연예술</button>
+          <button class="chip" data-chip="도시풍경">#도시풍경</button>
+        </div>
+      </div>
+      <aside class="side-card" id="section-cs" aria-labelledby="quickLinksTitle">
+        <div class="side-title" id="quickLinksTitle">바로가기</div>
+        <div class="quick-links">
+          <a class="quick" href="#section-donation" title="납본/기증 신청">
+            <div class="ico">📘</div><div>납본/기증 신청</div>
+          </a>
+          <a class="quick" href="#section-req" title="열람/대출/복제 신청">
+            <div class="ico">📝</div><div>열람/대출/복제 신청</div>
+          </a>
+          <a class="quick" href="#section-collections" title="추천 컬렉션">
+            <div class="ico">🌟</div><div>추천 컬렉션</div>
+          </a>
+          <a class="quick" href="#section-notice" title="공지사항">
+            <div class="ico">📢</div><div>공지사항</div>
+          </a>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Stats / info strip -->
+  <section>
+    <div class="container">
+      <div class="banner" role="status" aria-live="polite">
+        <strong>연계 수집 현황</strong> · 서울시립대 1,000,000건 · 공예박물관 85,000건 · 관광재단 42,000건 · 외 다수 기관
+      </div>
+    </div>
+  </section>
+
+  <!-- Collections -->
+  <section id="section-collections">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-title">추천 컬렉션</div>
+          <div class="section-desc">주제·시대·장르 별로 큐레이션된 아카이브 컬렉션</div>
+        </div>
+        <button class="btn" id="moreCollections">더보기</button>
+      </div>
+      <div class="scroll-wrap">
+        <div class="hscroll" id="collections">
+          <!-- sample cards -->
+          <article class="card-col">
+            <div class="cover"></div>
+            <div class="body">
+              <strong>서울의 근현대 도시풍경</strong>
+              <div class="meta">사진 · 1,240건</div>
+            </div>
+          </article>
+          <article class="card-col">
+            <div class="cover"></div>
+            <div class="body">
+              <strong>공연예술 기록 아카이브</strong>
+              <div class="meta">영상/이미지 · 860건</div>
+            </div>
+          </article>
+          <article class="card-col">
+            <div class="cover"></div>
+            <div class="body">
+              <strong>서울학 학술자료</strong>
+              <div class="meta">문서 · 32,000건</div>
+            </div>
+          </article>
+          <article class="card-col">
+            <div class="cover"></div>
+            <div class="body">
+              <strong>산업·공예 아카이브</strong>
+              <div class="meta">이미지/문서 · 5,200건</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest items -->
+  <section>
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-title">최신 수집 자료</div>
+          <div class="section-desc">최근 30일 내 입수된 자료를 확인하세요</div>
+        </div>
+        <div>
+          <select class="select" id="latestType">
+            <option value="all">전체</option>
+            <option value="text">문서</option>
+            <option value="image">이미지</option>
+            <option value="video">동영상</option>
+            <option value="audio">음원</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid" id="latestGrid">
+        <!-- item cards (samples) -->
+        <article class="card-item" data-type="image">
+          <div class="thumb" style="background:linear-gradient(120deg,#d1fae5,#fef3c7)"></div>
+          <div class="body">
+            <div class="badge">이미지</div>
+            <h3 style="margin:8px 0 4px; font-size:16px">남산 전경(1978)</h3>
+            <div class="meta">서울역사사진관 · 2025-09-10</div>
+          </div>
+        </article>
+        <article class="card-item" data-type="video">
+          <div class="thumb" style="background:linear-gradient(120deg,#e0e7ff,#f5d0fe)"></div>
+          <div class="body">
+            <div class="badge">동영상</div>
+            <h3 style="margin:8px 0 4px; font-size:16px">광장 공연 기록</h3>
+            <div class="meta">공연예술센터 · 2025-09-12</div>
+          </div>
+        </article>
+        <article class="card-item" data-type="text">
+          <div class="thumb" style="background:linear-gradient(120deg,#fee2e2,#e9d5ff)"></div>
+          <div class="body">
+            <div class="badge">문서</div>
+            <h3 style="margin:8px 0 4px; font-size:16px">서울학연구 통권 42호</h3>
+            <div class="meta">서울시립대 · 2025-09-20</div>
+          </div>
+        </article>
+        <article class="card-item" data-type="audio">
+          <div class="thumb" style="background:linear-gradient(120deg,#cffafe,#e5e7eb)"></div>
+          <div class="body">
+            <div class="badge">음원</div>
+            <h3 style="margin:8px 0 4px; font-size:16px">서울 소리(필드레코딩)</h3>
+            <div class="meta">사운드랩 · 2025-09-22</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Donation / Deposit -->
+  <section id="section-donation">
+    <div class="container">
+      <div class="banner">
+        <h2 style="margin:0 0 8px">납본/기증 안내</h2>
+        <p style="margin:0 0 12px; color:var(--muted)">서울의 기록을 함께 만들어 주세요. 온라인으로 손쉽게 신청하고 진행상황을 확인할 수 있습니다.</p>
+        <div class="search-row">
+          <a class="btn primary" href="#" title="납본 신청">납본 신청</a>
+          <a class="btn" href="#" title="기증 신청">기증 신청</a>
+          <a class="btn" href="#" title="목록 보기">납본/기증 목록</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Requests -->
+  <section id="section-req">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-title">열람/대출/복제 신청</div>
+          <div class="section-desc">저작권 및 열람 정책에 따라 처리됩니다</div>
+        </div>
+      </div>
+      <div class="search-card">
+
+          <button class="btn primary">신청하기</button>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Notices -->
+  <section id="section-notice">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-title">공지사항</div>
+        <a class="btn" href="#">전체 보기</a>
+      </div>
+      <div class="notices">
+        <ul>
+          <li><span class="note-date">2025-09-18</span>서울학 100만 건 데이터 연계 완료 안내</li>
+          <li><span class="note-date">2025-09-12</span>아카이브 시스템 점검(09/30 01:00~04:00)</li>
+          <li><span class="note-date">2025-09-02</span>납본/기증 온라인 접수 오픈</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="section-my">
+  <div class="container foot">
+    <div>
+      <strong>서울 아카이브</strong>
+      <small>ⓒ 2025 Seoul Metropolitan Library. All rights reserved.</small>
+    </div>
+    <div>
+      <a class="btn" href="#">이용약관</a>
+      <a class="btn" href="#">개인정보처리방침</a>
+      <a class="btn" href="#">오픈API</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Mobile nav drawer (simple) -->
+<div id="mobileMenu" hidden>
+  <div class="container" style="padding:12px 0; border-bottom:1px solid var(--border)">
+    <a class="btn" href="#section-search">검색/열람</a>
+    <a class="btn" href="#section-cs">민원신청</a>
+    <a class="btn" href="#section-collections">컬렉션</a>
+    <a class="btn" href="#section-donation">납본/기증</a>
+    <a class="btn" href="#section-notice">공지사항</a>
+    <a class="btn" href="#section-my">마이페이지</a>
+  </div>
+</div>
+
+<script>
+  const menuToggle = document.getElementById('menuToggle');
+  const mobileMenu = document.getElementById('mobileMenu');
+  menuToggle?.addEventListener('click', ()=>{
+    const open = mobileMenu.hasAttribute('hidden') ? true : false;
+    if(open){ mobileMenu.removeAttribute('hidden'); } else { mobileMenu.setAttribute('hidden',''); }
+    menuToggle.setAttribute('aria-expanded', String(open));
+  });
+
+  // Quick chips → fill into search
+  document.querySelectorAll('.chip').forEach(ch=>{
+    ch.addEventListener('click', ()=>{
+      const q = document.getElementById('q');
+      q.value = ch.dataset.chip || '';
+      q.focus();
+    });
+  });
+
+  // Fake search submit → highlight section
+  document.getElementById('searchForm')?.addEventListener('submit', ()=>{
+    document.getElementById('section-collections').scrollIntoView({behavior:'smooth'});
+  });
+
+  // Filter latest items
+  document.getElementById('latestType')?.addEventListener('change', (e)=>{
+    const val = e.target.value;
+    document.querySelectorAll('#latestGrid .card-item').forEach(it=>{
+      const type = it.getAttribute('data-type');
+      it.style.display = (val==='all' || type===val) ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>

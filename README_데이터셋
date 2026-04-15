@@ -1,0 +1,8 @@
+pip install ultralytics opencv-python tqdm pyyaml
+
+
+python build_yolo_dataset.py --videos test.mpg4
+
+#웹... 환경 설정
+pip install flask werkzeug
+python app.py

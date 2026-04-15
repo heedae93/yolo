@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>모델 학습</title>
+  <style>
+    .progress-container {
+      width: 80%; background: #eee; border-radius: 10px; margin: 20px 0;
+    }
+    .progress-bar {
+      height: 24px; width: 0%; background: #27ae60; border-radius: 10px;
+      text-align: center; color: white;
+    }
+
+    .thin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      border: 1px solid #ccc;
+    }
+
+    .thin-table th, .thin-table td {
+      border: 1px solid #e5e5e5;
+      padding: 6px 8px;
+      text-align: left;
+    }
+
+    .thin-table th {
+      background: #f8f8f8;
+      font-weight: 600;
+    }
+
+    .thin-table tr:hover {
+      background: #f0f7ff;
+    }
+
+  </style>
+
+</head>
+<body>
+  <h2>모델 학습</h2>
+  <label for="modelSelect">모델 선택:</label>
+  <div >
+  <table class="thin-table">
+    <thead>
+      <tr>
+        <th width="5%" align="center">
+        </th>
+        <th  width="10%" height="50" align="left">유형 </th>
+        <th  width="10%" height="50" align="center">데이터셋</th>
+        <th  width="30%" height="50" align="center">상태</th>
+        <th  width="10%" height="50" align="center">생성일</th>
+        <th  width="30%" height="50" align="left">ETC</th>
+      </tr>
+    </thead>
+    <tbody id="boxTableBody">
+    </tbody>
+  </table>
+  </div>
+
+  <select id="modelSelect">
+    <option value="yolo">YOLOv8n</option>
+    <option value="mask">Mask R-CNN</option>
+  </select>
+  <button onclick="start()" id="start_btn">학습 실행</button>
+  <button onclick="stop()" id="stop_btn">작업중단</button>
+  <div class="small">job_id: <input type="text" id="jobIdLabel" size = "50"/> <button onclick="status()" id="status_btn">상태조회</button></div>
+  <div id="jobInfo" class="small"></div>
+  <div class="card" id="log_view">
+    <h3>실행 상태 / 로그</h3>
+    <div id="statusBox" class="small"></div>
+    <div id ="status"></div>
+    <pre id="logBox" style="max-height:240px;overflow:auto;background:#0b0b0b;color:#e5e5e5;padding:10px;border-radius:8px"></pre>
+  </div>
+
+
+<script>
+  let currentJob = null;
+  let lastFrameId = 0;
+  let pollTimer = null;
+  const limit = 10;
+  const plimit = 5;
+  const boxTBody = document.getElementById('boxTableBody');
+
+  async function getModelList(pageNo){
+
+
+    const res = await fetch('/api/get_job_list?page='+pageNo+'&limit='+limit);
+
+    const arr = await res.json();
+
+    if(Array.isArray(arr) && arr.length){
+      arr.forEach(addJobItem);
+    }
+
+
+  }
+
+  getModelList(0);
+
+
+  function addJobItem(item){
+
+    const tr = document.createElement("tr");
+    /* 체크박스 */
+    const tdCheck = document.createElement("td");
+    tdCheck.style.textAlign = "center";
+    if (item.ext_num > 0) {
+      tdCheck.innerHTML = `
+        <input type="checkbox"
+              class="row-check"
+              value="${item.job_id}_${item.ext_num}"
+              onchange="onRowCheckChange(this)">
+      `;
+    } else {
+      // ext_num == 0 → 빈칸 처리
+      tdCheck.innerHTML = `-`;
+    }
+
+    // 클릭 시 프레임 보기
+    // 파일명
+    const tdName = document.createElement("td");
+    tdName.textContent = item.file_name;
+
+    // TS
+    const tdTs = document.createElement("td");
+    tdTs.textContent = item.ts;
+
+    // JOB ID
+    const tdJobId = document.createElement("td");
+    tdJobId.textContent = item.job_id;
+
+    // 프레임 수
+    const tdCount = document.createElement("td");
+    tdCount.textContent = item.total_count;
+
+    // 재추출 버튼
+    const tdExtract = document.createElement("td");
+    tdExtract.innerHTML = `
+      <button class="btn2 btn-primary" onclick="event.stopPropagation(); reExtract('${item.job_id}')">
+        재추출 [${item.ext_num}]
+      </button>
+    `;
+
+    // 삭제 버튼
+    const tdDelete = document.createElement("td");
+    tdDelete.innerHTML = `
+      <button class="btn2 btn-primary" onclick="event.stopPropagation(); deleteJob('${item.job_id}')">
+        삭제
+      </button>
+    `;
+    tr.appendChild(tdCheck);
+    tr.appendChild(tdName);
+    tr.appendChild(tdTs);
+    tr.appendChild(tdJobId);
+    tr.appendChild(tdCount);
+    tr.appendChild(tdExtract);
+    tr.appendChild(tdDelete);
+    boxTBody.appendChild(tr);
+
+  }
+
+  function onRowCheckChange(current) {
+    document.querySelectorAll('.row-check').forEach(cb => {
+      if (cb !== current) cb.checked = false;
+    });
+  }
+  document.getElementById("checkAll").addEventListener("change", (e) => {
+    document.querySelectorAll(".row-check").forEach(cb => {
+      cb.checked = e.target.checked;
+    });
+  });
+
+  function getCheckedJobId() {
+    const checked = document.querySelector('.row-check:checked');
+    return checked ? checked.value : null;
+  }
+
+
+  async function start(){
+      //alert('start')
+      document.getElementById('start_btn').disabled=true // 버튼 클릭못하게
+      const model =  document.getElementById('modelSelect').value;
+      const jobIds = getCheckedJobId();
+      if (!jobIds) {
+        alert("작업을 선택하세요.");
+        return;
+      }
+      var arr = jobIds.split("_");
+      jobId  =  arr[0];
+      chk = arr[1];
+      if(chk =="0") {
+        alert("추출된 정보가 없습니다.");
+        return;
+      }
+
+      const res = await fetch('/api/train_dataset?model='+model+'&job_id='+jobId);
+      const data = await res.json();
+
+      if(data.error){ alert(data.error); return; }
+      currentJob = data.job_id;
+      lastFrameId = 0;
+
+      document.getElementById('jobIdLabel').value = currentJob;
+      //document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
+      document.getElementById("status").innerText = " 모델 학습을 시작합니다...";
+
+
+      startPolling();
+  };
+
+  async function stop(){
+      //alert('start')
+      document.getElementById('start_btn').disabled=true // 버튼 클릭못하게
+
+      const res = await fetch('/api/stop/'+currentJob);
+      const data = await res.json();
+
+      if(data.error){ alert(data.error); return; }
+
+      document.getElementById('jobIdLabel').value = currentJob;
+      //document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
+      document.getElementById("status").innerText = " 중단요청 -> "+data.status;
+
+
+      startPolling();
+  };
+
+  async function status(){
+      //alert('start')
+
+
+      const res = await fetch('/api/status/'+currentJob);
+      const data = await res.json();
+
+      if(data.error){
+        document.getElementById("status").innerText = " 잡 상태 -> "+data.error;
+        return;
+      }
+
+      document.getElementById('jobIdLabel').value = currentJob;
+      //document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
+      document.getElementById("status").innerText = " 잡 상태 -> "+data.status;
+
+
+      startPolling();
+  };
+  function startPolling(){
+
+      if(pollTimer) clearInterval(pollTimer);
+      //alert(pollTimer)
+      pollTimer = setInterval(async ()=>{
+
+          if(!currentJob) return;
+          // 상태/로그
+          const sres = await fetch('/api/status/'+currentJob);
+          const stat = await sres.json();
+
+          if(stat.error != null){
+            alert(JSON.stringify(stat))
+            clearInterval(pollTimer);
+            document.getElementById('start_btn').disabled=false // 버튼 활성화
+            document.getElementById('statusBox').textContent=''
+            document.getElementById('logBox').textContent = ''
+            return
+          }
+          document.getElementById('statusBox').textContent = '상태: ' + stat.status + ' (pid='+(stat.pid ?? 'N/A')+', rc='+(stat.returncode ?? 'N/A')+')';
+          const lres = await fetch('/api/log/'+currentJob+'?tail=200');
+          document.getElementById('logBox').textContent = await lres.text();
+
+          if(['completed'].includes(stat.status)){
+            clearInterval(pollTimer);
+            document.getElementById('start_btn').disabled=false // 버튼 활성화
+
+          }
+
+          if(['completed','failed'].includes(stat.status)){
+            clearInterval(pollTimer);
+            document.getElementById('start_btn').disabled=false // 버튼 활성화
+            document.getElementById('statusBox').textContent=''
+            document.getElementById('logBox').textContent = ''
+
+          }
+      }, 1200);
+  }
+
+</script>
+
+</body>
+</html>

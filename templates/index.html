@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>AI 학습 플랫폼</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; }
+    .navbar {
+      display: flex; background: #2c3e50; padding: 10px;
+    }
+    .navbar a {
+      color: white; padding: 10px 20px; text-decoration: none;
+    }
+    .navbar a:hover {
+      background: #34495e;
+    }
+    iframe {
+      width: 100%; height: calc(100vh - 50px); border: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a href="/data" target="mainFrame">데이터셋 구축(동영상)</a>
+    <a href="/img_data" target="mainFrame">데이터셋 구축(이미지)</a>
+    <a href="/train" target="mainFrame">모델학습</a>
+    <a href="/yolo_test" target="mainFrame">모델테스트</a>
+    <a href="/setup" target="mainFrame">환경설정</a>
+
+  </div>
+
+  <iframe name="mainFrame" src="/train"></iframe>
+</body>
+</html>

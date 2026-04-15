@@ -1,0 +1,34 @@
+{
+  "database": {
+    "dbname": "postgres",
+    "user_id": "postgres",
+    "password": "1234",
+    "host": "192.168.0.231",
+    "port": "5432"
+  },
+  "data": {
+    "collect_root": "/data/ingest",
+    "train_root": "D:/project/umssumss/yolo8/avi_extracter/static/yolo_dataset",
+    "image_dir": "D:/project/umssumss/yolo8/dataset",
+    "label_dir": "D:/project/umssumss/yolo8/dataset",
+    "web_root": "D:/project/umssumss/yolo8/avi_extracter"
+  },
+  "preview": {
+    "sample_path": ""
+  },
+  "train": {
+    "model_path": "D:/project/umssumss/yolo8/avi_extracter/yolov8n.pt",
+    "exec_workdir": "",
+    "dataset_arg": "",
+    "entry": "./train_from_web.py",
+    "epochs": 600,
+    "batch": 24,
+    "test_model": "D:\\project\\umssumss\\yolo8\\avi_extracter\\static\\yolo_dataset\\231eb7a5b5cc44779e448b5330435404\\runs\\default_train\\weights\\best.pt"
+  },
+  "edge": {
+    "enable": false,
+    "download_dir": "/var/edge/models",
+    "package_name": "model_bundle.tgz",
+    "protocol": "http"
+  }
+}

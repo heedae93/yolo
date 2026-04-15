@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>생활폐기물관리시스템(수거&클린 - SUCOOL)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: Pretendard, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .glass { backdrop-filter: blur(10px); }
+  </style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-cyan-50 text-gray-800">
+  <!-- NAVBAR -->
+  <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/80 glass">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+      <div class="text-xl font-bold text-emerald-600">SUCL Platform</div>
+      <nav class="hidden gap-8 text-sm md:flex">
+        <a href="#features" class="transition hover:text-emerald-600">기능</a>
+        <a href="#services" class="transition hover:text-emerald-600">서비스</a>
+        <a href="#ai" class="transition hover:text-emerald-600">AI 기술</a>
+        <a href="#workflow" class="transition hover:text-emerald-600">운영 흐름</a>
+      </nav>
+      <a href="#contact" class="rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-emerald-600">도입 문의</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="mx-auto grid max-w-7xl gap-16 px-6 py-28 lg:grid-cols-2 lg:items-center">
+    <div>
+      <div class="inline-flex rounded-full bg-emerald-100 px-4 py-2 text-sm font-medium text-emerald-700">
+        생활폐기물 통합 관리 SaaS
+      </div>
+      <h1 class="mt-6 text-4xl font-bold leading-tight md:text-5xl">
+        생활폐기물 관리의
+        <span class="block text-emerald-600">스마트 디지털 플랫폼</span>
+      </h1>
+      <p class="mt-6 text-lg leading-relaxed text-gray-600">
+        공공기관, 수거 대행사, 사업장을 하나의 시스템으로 연결하는 차세대 생활폐기물 관리 플랫폼입니다.
+        민원 관리부터 수거 처리, 통계 분석까지 통합 운영이 가능합니다.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-4">
+        <a href="#services" class="rounded-2xl bg-emerald-500 px-6 py-3 font-semibold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-600">서비스 소개</a>
+        <a href="#ai" class="rounded-2xl border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:bg-gray-50">데모 보기</a>
+      </div>
+      <div class="mt-10 grid gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl bg-white p-5 shadow-sm">
+          <div class="text-2xl font-bold text-emerald-600">3 in 1</div>
+          <p class="mt-2 text-sm text-gray-500">사용자앱 · 수거앱 · 관리자웹</p>
+        </div>
+        <div class="rounded-2xl bg-white p-5 shadow-sm">
+          <div class="text-2xl font-bold text-cyan-600">AI</div>
+          <p class="mt-2 text-sm text-gray-500">자동 계량 및 영상 인식</p>
+        </div>
+        <div class="rounded-2xl bg-white p-5 shadow-sm">
+          <div class="text-2xl font-bold text-emerald-600">MSA</div>
+          <p class="mt-2 text-sm text-gray-500">확장형 클라우드 구조</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative">
+      <div class="absolute -left-6 -top-6 h-32 w-32 rounded-full bg-emerald-200 blur-3xl"></div>
+      <div class="absolute -right-6 -bottom-6 h-40 w-40 rounded-full bg-cyan-200 blur-3xl"></div>
+      <div class="relative rounded-[28px] bg-white p-6 shadow-2xl ring-1 ring-gray-100">
+        <div class="rounded-[22px] bg-gradient-to-br from-emerald-500 to-cyan-500 p-6 text-white">
+          <div class="text-sm opacity-90">실시간 운영 대시보드</div>
+          <div class="mt-3 text-2xl font-bold">Waste Management Overview</div>
+          <div class="mt-6 grid gap-4 sm:grid-cols-2">
+            <div class="rounded-2xl bg-white/15 p-4">
+              <div class="text-sm opacity-80">오늘 수거 요청</div>
+              <div class="mt-2 text-3xl font-bold">128</div>
+            </div>
+            <div class="rounded-2xl bg-white/15 p-4">
+              <div class="text-sm opacity-80">자동 분석 완료</div>
+              <div class="mt-2 text-3xl font-bold">94%</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+          <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-center">
+            <div class="text-sm text-gray-500">사용자 앱</div>
+            <div class="mt-2 font-semibold">수거 요청</div>
+          </div>
+          <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-center">
+            <div class="text-sm text-gray-500">수거 앱</div>
+            <div class="mt-2 font-semibold">QR 처리</div>
+          </div>
+          <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-center">
+            <div class="text-sm text-gray-500">관리자 웹</div>
+            <div class="mt-2 font-semibold">통계 분석</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="bg-white py-24">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">Core Features</p>
+        <h2 class="mt-3 text-3xl font-bold md:text-4xl">핵심 기능</h2>
+        <p class="mt-4 text-gray-600">생활폐기물 관리 업무를 디지털 중심으로 전환하기 위한 핵심 기능을 제공합니다.</p>
+      </div>
+
+      <div class="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+          <div class="text-3xl">♻️</div>
+          <h3 class="mt-4 text-lg font-semibold">통합 폐기물 관리 플랫폼</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">민원 접수부터 수거 관리, 봉투 판매, 통계 분석까지 하나의 플랫폼에서 운영합니다.</p>
+        </div>
+        <div class="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+          <div class="text-3xl">📱</div>
+          <h3 class="mt-4 text-lg font-semibold">사용자 · 수거 · 관리자 연결</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">모바일 앱과 관리자 시스템이 실시간으로 연결되어 업무 상태를 즉시 공유할 수 있습니다.</p>
+        </div>
+        <div class="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+          <div class="text-3xl">🤖</div>
+          <h3 class="mt-4 text-lg font-semibold">AI 영상 인식 자동 계량</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">수거통 인식과 음식물 양 분석을 통해 보다 표준화된 수거량 관리를 지원합니다.</p>
+        </div>
+        <div class="rounded-3xl border border-gray-100 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+          <div class="text-3xl">☁️</div>
+          <h3 class="mt-4 text-lg font-semibold">클라우드 MSA 아키텍처</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">대규모 기관 운영에 적합한 확장성과 안정성을 고려한 마이크로서비스 기반 구조입니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services" class="bg-gradient-to-r from-emerald-50 to-cyan-50 py-24">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600">Service Structure</p>
+        <h2 class="mt-3 text-3xl font-bold md:text-4xl">서비스 구성</h2>
+        <p class="mt-4 text-gray-600">현장과 관리 시스템을 하나로 묶는 3단 구성의 서비스 구조입니다.</p>
+      </div>
+
+      <div class="mt-14 grid gap-8 md:grid-cols-3">
+        <div class="rounded-3xl bg-white p-8 shadow-lg ring-1 ring-emerald-100">
+          <div class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">Mobile App</div>
+          <h3 class="mt-5 text-2xl font-bold text-emerald-600">사용자 앱</h3>
+          <p class="mt-4 text-gray-600">수거 요청, QR 확인, 결제 관리, 수거 내역 조회 기능을 제공합니다.</p>
+          <ul class="mt-6 space-y-2 text-sm text-gray-500">
+            <li>• 수거 요청 접수</li>
+            <li>• QR 기반 사업장 식별</li>
+            <li>• 결제 및 사용 내역 확인</li>
+          </ul>
+        </div>
+        <div class="rounded-3xl bg-white p-8 shadow-lg ring-1 ring-cyan-100">
+          <div class="inline-flex rounded-full bg-cyan-100 px-3 py-1 text-sm font-medium text-cyan-700">Field App</div>
+          <h3 class="mt-5 text-2xl font-bold text-cyan-600">수거 관리자 앱</h3>
+          <p class="mt-4 text-gray-600">현장 수거 처리, QR 스캔, 수기·음성 입력 등 빠른 현장 업무를 지원합니다.</p>
+          <ul class="mt-6 space-y-2 text-sm text-gray-500">
+            <li>• 현장 QR 처리</li>
+            <li>• 수거 데이터 즉시 등록</li>
+            <li>• 작업 상태 실시간 반영</li>
+          </ul>
+        </div>
+        <div class="rounded-3xl bg-white p-8 shadow-lg ring-1 ring-emerald-100">
+          <div class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">Admin Web</div>
+          <h3 class="mt-5 text-2xl font-bold text-emerald-600">관리자 웹</h3>
+          <p class="mt-4 text-gray-600">사업장 관리, 민원 관리, 수거 통계, 보고서 생성까지 통합 관리가 가능합니다.</p>
+          <ul class="mt-6 space-y-2 text-sm text-gray-500">
+            <li>• 사업장/사용자 관리</li>
+            <li>• 통계 및 대시보드</li>
+            <li>• 보고서 및 운영 모니터링</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI SECTION -->
+  <section id="ai" class="bg-white py-24">
+    <div class="mx-auto grid max-w-7xl gap-16 px-6 lg:grid-cols-2 lg:items-center">
+      <div class="rounded-[28px] bg-gradient-to-br from-gray-50 to-gray-100 p-8 shadow-inner">
+        <div class="rounded-[24px] bg-white p-8 shadow-lg">
+          <div class="text-sm font-semibold text-emerald-600">AI Vision Analysis</div>
+          <h3 class="mt-3 text-2xl font-bold">AI 기반 수거량 분석</h3>
+          <div class="mt-6 space-y-4">
+            <div class="rounded-2xl bg-emerald-50 p-4">
+              <div class="text-sm text-emerald-700">YOLO 기반 수거통 인식</div>
+              <div class="mt-2 h-2 rounded-full bg-emerald-200"><div class="h-2 w-[88%] rounded-full bg-emerald-500"></div></div>
+            </div>
+            <div class="rounded-2xl bg-cyan-50 p-4">
+              <div class="text-sm text-cyan-700">Segmentation 기반 수거량 분석</div>
+              <div class="mt-2 h-2 rounded-full bg-cyan-200"><div class="h-2 w-[81%] rounded-full bg-cyan-500"></div></div>
+            </div>
+            <div class="rounded-2xl bg-emerald-50 p-4">
+              <div class="text-sm text-emerald-700">수거 통계 자동 생성</div>
+              <div class="mt-2 h-2 rounded-full bg-emerald-200"><div class="h-2 w-[92%] rounded-full bg-emerald-500"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">AI Technology</p>
+        <h2 class="mt-3 text-3xl font-bold md:text-4xl">현장 데이터를 자동으로 분석하는 AI 엔진</h2>
+        <p class="mt-6 text-lg leading-relaxed text-gray-600">
+          영상 인식 기술을 활용하여 수거통을 식별하고 음식물 양을 분석해 자동 계량 데이터를 생성합니다.
+          이를 통해 현장 처리의 정확성과 운영 표준화를 동시에 높일 수 있습니다.
+        </p>
+        <ul class="mt-8 space-y-4 text-gray-600">
+          <li class="flex gap-3"><span class="mt-1 text-emerald-600">●</span><span>YOLO 기반 수거통 및 대상 인식</span></li>
+          <li class="flex gap-3"><span class="mt-1 text-cyan-600">●</span><span>Segmentation 기반 음식물 영역 분석</span></li>
+          <li class="flex gap-3"><span class="mt-1 text-emerald-600">●</span><span>자동 계량 데이터와 통계 리포트 생성</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section id="workflow" class="bg-gradient-to-r from-cyan-50 to-emerald-50 py-24">
+    <div class="mx-auto max-w-7xl px-6">
+      <div class="mx-auto max-w-3xl text-center">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-600">Workflow</p>
+        <h2 class="mt-3 text-3xl font-bold md:text-4xl">서비스 운영 흐름</h2>
+        <p class="mt-4 text-gray-600">가입부터 현장 수거, 운영 관리까지 이어지는 전체 프로세스입니다.</p>
+      </div>
+
+      <div class="mt-14 grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-3xl bg-white p-7 text-center shadow-sm">
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 font-bold text-emerald-700">1</div>
+          <h3 class="mt-4 font-semibold">회원 가입 및 QR 발급</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">사업장 등록 후 QR코드를 발급받아 수거 관리를 시작합니다.</p>
+        </div>
+        <div class="rounded-3xl bg-white p-7 text-center shadow-sm">
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 font-bold text-cyan-700">2</div>
+          <h3 class="mt-4 font-semibold">수거 요청 접수</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">사용자 앱에서 수거 요청을 등록하고 진행 상태를 확인합니다.</p>
+        </div>
+        <div class="rounded-3xl bg-white p-7 text-center shadow-sm">
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 font-bold text-emerald-700">3</div>
+          <h3 class="mt-4 font-semibold">현장 수거 처리</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">수거 앱에서 QR 및 음성 기반으로 빠르게 현장 업무를 처리합니다.</p>
+        </div>
+        <div class="rounded-3xl bg-white p-7 text-center shadow-sm">
+          <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-100 font-bold text-cyan-700">4</div>
+          <h3 class="mt-4 font-semibold">통계 및 운영 관리</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">관리자 웹에서 통계, 민원, 보고서, 운영 현황을 통합 관리합니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section id="contact" class="py-24">
+    <div class="mx-auto max-w-5xl px-6">
+      <div class="rounded-[32px] bg-gradient-to-r from-emerald-500 to-cyan-500 p-12 text-center text-white shadow-2xl md:p-16">
+        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">Contact</p>
+        <h2 class="mt-4 text-3xl font-bold md:text-4xl">생활폐기물 관리의 디지털 혁신을 시작하세요</h2>
+        <p class="mx-auto mt-5 max-w-2xl text-white/90">
+          지자체 및 공공기관을 위한 스마트 운영 플랫폼으로 민원, 수거, 통계, AI 분석까지 하나로 연결할 수 있습니다.
+        </p>
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+          <a href="#" class="rounded-2xl bg-white px-8 py-3 font-semibold text-emerald-600 shadow transition hover:bg-gray-100">도입 상담 문의</a>
+          <a href="#features" class="rounded-2xl border border-white/40 px-8 py-3 font-semibold text-white transition hover:bg-white/10">기능 더 보기</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-gray-200 bg-white py-12 text-center text-sm text-gray-500">
+    © SUCL Waste Management Platform. All rights reserved.
+  </footer>
+</body>
+</html>
