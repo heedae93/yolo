@@ -2,1203 +2,733 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"/>
-<title>Video -> Boxes Web</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1단계 - 동영상으로 학습 데이터 만들기</title>
+<link rel="stylesheet" href="/static/base.css">
 <style>
-body{font-family:system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Arial,sans-serif;max-width:1100px;margin:10px auto;padding:0 16px}
-.grid{display:grid;grid-template-columns:400px 1fr;gap:16px}
-.card{border:1px solid #ddd;border-radius:5px;padding:5px;margin:1px 0;box-shadow:0 2px 6px rgba(0,0,0,.04)}
-.btn{padding:8px 12px;border-radius:10px;border:1px solid #ccc;background:#f7f7f7;cursor:pointer}
-.btn2{padding:2px 6px;border-radius:10px;border:1px solid #ccc;background:#f7f7f7;cursor:pointer}
-.btn-primary2{background:#2563eb;color:#fff;border-color:#1d4ed8}
-.btn-primary{background:#2563eb;color:#fff;border-color:#1d4ed8}
-ul {
-    display: block;
-    list-style-type: disc;
-    margin-block-start: 1em;
-    margin-block-end: 1em;
-    padding-inline-start: 5px;
-    unicode-bidi: isolate;
+body { padding: 20px; }
+
+/* 안내 배너 */
+.guide-banner {
+  background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06));
+  border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 14px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
 }
-li{list-style:none;margin:0;padding:8px;border-bottom:1px solid #eee;cursor:pointer}
-li:hover{background:#f5f8ff}
-li.active{background:#e7f0ff}
-.small{color:#666;font-size:12px}
-img#viewerImg{max-width:100%;border-radius:8px;border:1px solid #ddd}
-code{background:#f6f8fa;padding:1px 4px;border-radius:6px}
-
-.viewer-wrap{position:relative; max-width:100%}
-#viewerImg{max-width:100%; display:block}
-#overlayCanvas{position:absolute; left:0; top:0; pointer-events:none}
-.ctrls{display:flex; gap:8px; align-items:center; margin:8px 0}
-.badge{background:#eef; border:1px solid #99c; padding:2px 6px; border-radius:8px; font-size:12px}
-
-.thin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  table-layout: fixed;   /* 컬럼 폭 고정 */
-  border: 1px solid #ccc;
+.guide-banner h1 {
+  font-size: 17px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 10px;
 }
-
-.thin-table th, .thin-table td {
-  border: 1px solid #e5e5e5;
-  padding: 6px 8px;
-  text-align: left;
-  white-space: nowrap;       /* 줄바꿈 금지 */
-  overflow: hidden;          /* 넘치는 부분 숨김 */
-  text-overflow: ellipsis;   /* ... 표시 */
+.step-pill {
+  background: #3b82f6; color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px;
 }
-.thin-table th:nth-child(1) { width: 30px; }
-.thin-table th:nth-child(2) { width: 120px; }
-.thin-table th:nth-child(3) { width: 60px; }
-.thin-table th:nth-child(4) { width: 120px; }
-.thin-table th:nth-child(5) { width: 40px; }
-.thin-table th:nth-child(6) { width: 40px; }
-
-.thin-table th {
-  background: #f8f8f8;
-  font-weight: 600;
+.guide-sub {
+  font-size: 13px; color: #94a3b8;
+  margin-bottom: 14px; line-height: 1.6;
+}
+.guide-steps {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.guide-step {
+  flex: 1; min-width: 150px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 13px;
+}
+.guide-step-num {
+  font-size: 11px; font-weight: 700;
+  color: #60a5fa; margin-bottom: 4px;
+}
+.guide-step-num.done { color: #34d399; }
+.guide-step-desc {
+  font-size: 11px; color: #64748b; line-height: 1.5;
 }
 
-.thin-table tr:hover {
-  background: #f0f7ff;
+/* 목록 행: 작업목록 + 장면목록 나란히 */
+.lists-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
-.btn2 {
-  padding: 4px 6px;
-  font-size: 12px;
-  margin-right: 4px;
-  cursor: pointer;
+/* 통합 뷰어 패널 */
+.viewer-panel { padding: 16px; }
+.viewer-panel-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px; padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.viewer-panel-header h3 { margin: 0; font-size: 14px; }
+.viewer-panel-body {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 16px;
+  align-items: start;
+}
+.viewer-right { display: flex; flex-direction: column; gap: 14px; }
+
+/* upload */
+.upload-card { margin-bottom: 14px; }
+.upload-row { display: flex; align-items: center; gap: 12px; }
+.upload-row input[type="file"] {
+  flex: 1; background: var(--card2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 9px 12px;
+  color: var(--text2); font-size: 13px;
+}
+.upload-row input[type="file"]::file-selector-button {
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--text2); padding: 4px 10px; border-radius: 6px;
+  cursor: pointer; font-size: 12px; margin-right: 8px;
 }
 
-.selected-row {
-  background-color: #dceeff !important;
+/* tables */
+.list-wrap {
+  max-height: 380px; overflow-y: auto;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+}
+.table td, .table th { font-size: 12px; padding: 8px 10px; }
+.table td:first-child, .table th:first-child { padding-left: 12px; }
+.selected-row td { background: var(--selected) !important; }
+
+.col-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.col-header h3 { margin: 0; font-size: 13px; font-weight: 600; }
+
+/* pager */
+.pager { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; }
+.pager span {
+  padding: 3px 9px; border-radius: 5px; font-size: 11px;
+  cursor: pointer; border: 1px solid var(--border); color: var(--text2);
+  background: var(--card2); transition: all 0.15s;
+}
+.pager span:hover { border-color: var(--accent); color: var(--text); }
+.pager span.cur { background: var(--accent); border-color: #2563eb; color: #fff; }
+
+/* viewer */
+.viewer-wrap { position: relative; }
+#viewerImg { width: 100%; height: auto; display: block; border-radius: 8px; border: 1px solid var(--border); }
+#overlayCanvas { position: absolute; left:0; top:0; pointer-events: none; }
+
+/* edit controls */
+.edit-controls {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.edit-toggle-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2);
+}
+.edit-toggle-label input { accent-color: var(--accent); width: 14px; height: 14px; }
+.edit-hint {
+  font-size: 11px; color: var(--muted); padding: 4px 10px;
+  background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);
+  border-radius: 6px;
 }
 
+/* box table */
+.box-table-wrap { max-height: 320px; overflow-y: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.box-table .inp-cls { width: 100%; background:#fff; border:1px solid var(--border); color:var(--text); border-radius:4px; padding:3px 6px; font-size:11px; }
+.box-table input[type="number"] { width:52px; background:#fff; border:1px solid var(--border); color:var(--text); border-radius:4px; padding:3px 4px; font-size:11px; text-align:center; }
 
+/* tip box */
+.tip-box {
+  background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 8px; padding: 10px 13px; font-size:11px; color: #64748b;
+  line-height:1.6;
+}
+.tip-box strong { color: #34d399; }
+
+/* ── 컬럼 흐름 표시 ── */
+.col-flow {
+  display: flex; align-items: center;
+  margin-bottom: 12px;
+  background: rgba(37,99,235,0.05);
+  border: 1px solid rgba(37,99,235,0.15);
+  border-radius: 12px; padding: 10px 16px;
+}
+.col-flow-step {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: #64748b;
+}
+.col-flow-step .fn { font-size: 11px; color: #94a3b8; }
+.col-flow-step .sn {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: #e2e8f0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #64748b; flex-shrink: 0;
+}
+.col-flow-step.active .sn { background: var(--accent); color: #fff; box-shadow: 0 0 8px rgba(37,99,235,0.4); }
+.col-flow-arrow { color: #cbd5e1; font-size: 18px; padding: 0 6px; flex-shrink: 0; }
+.col-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: 10px; font-weight: 700; margin-right: 5px; flex-shrink: 0;
+}
 </style>
 </head>
 <body>
-<h2>데이터셋 구축</h2>
-<span>(동영상 업로드 → 바운딩박스 DB 저장 → 실시간 리스트/미리보기)</span>
-<div class="card">
-  <form id="uploadForm">
-    <input type="file" name="video" accept=".mp4,.mov,.avi,.mkv" required />
-    <button class="btn btn-primary" type="submit">업로드 & 처리 시작</button>
-  </form>
-  <div id="jobInfo" class="small"></div>
-</div>
-<div class="grid">
-<div class="card" id="log_view">
-  <h3>실행 상태 / 로그</h3>
-  <div id="statusBox" class="small"></div>
-  <pre id="logBox" style="max-height:240px;overflow:auto;background:#0b0b0b;color:#e5e5e5;padding:10px;border-radius:8px"></pre>
-</div>
 
-<div class="card">
-  <h3>JOB 목록 <span id="job_count"></span></h3>
-  <ul >
-    <table class="thin-table">
-      <thead>
-        <tr>
-          <th>프레임 개수</th>
-          <th>파일명</th>
-          <th>일시</th>
-          <th>JOB ID</th>
-          <th>재추출</th>
-          <th>삭제</th>
-        </tr>
-      </thead>
-      <tbody id="jobList"></tbody>
-    </table>
-  </ul>
-  <ul id="jobPageInd"></ul>
-</div>
-
-<div class="grid">
-  <div class="card">
-
-    <div class="card">
-      <h3>Frame 목록</h3>
-      <div class="small">job_id: <code id="jobIdLabel">-</code></div>
-      <ul >
-        <table class="thin-table" >
-          <thead>
-            <tr>
-              <th>위치</th>
-              <th>프레임 번호</th>
-              <th>박스 수</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody id="frameList"></tbody>
-        </table>
-      </ul>
-      <ul id="pageInd"></ul>
+<!-- 📌 단계 안내 배너 -->
+<div class="guide-banner">
+  <h1><span class="step-pill">1단계</span> 동영상으로 학습 데이터 만들기</h1>
+  <p class="guide-sub">
+    동영상을 올리면 AI가 자동으로 장면을 잘라내고, 물체를 찾아 <strong style="color:var(--accent);">파란 박스(인식 영역)</strong>로 표시합니다.<br>
+    표시된 박스가 정확한지 확인하고, 잘못된 부분은 <strong style="color:var(--accent);">직접 수정</strong>해 주세요. 정확할수록 학습도 잘 됩니다.
+  </p>
+  <div class="guide-steps">
+    <div class="guide-step">
+      <div class="guide-step-num">① 동영상 업로드</div>
+      <div class="guide-step-desc">mp4, avi, mov 파일 선택 후 "업로드 & 처리" 클릭</div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">② 동영상 선택</div>
+      <div class="guide-step-desc">"작업 목록"에서 업로드한 동영상 클릭</div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">③ 장면(프레임) 선택</div>
+      <div class="guide-step-desc">"프레임 목록"에서 확인할 장면 클릭 → 오른쪽에 이미지 표시</div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num done">④ 영역(박스) 수정</div>
+      <div class="guide-step-desc">"박스 편집 모드" ON → 박스 드래그/크기조정 → 저장</div>
     </div>
   </div>
+</div>
 
-  <div class="card">
-    <div class="card" style="width: 600px;">
-      <h3>미리보기</h3>
-      <div class="ctrls">
-        <label><input type="checkbox" id="editToggle"> 박스 편집</label>
-        <button class="btn btn-primary" id="addBoxBtn" disabled>박스 추가</button>
-        <button class="btn btn-primary" id="saveBoxBtn" disabled>선택 박스 저장</button>
-        <span class="badge" id="editHint" style="display:none">드래그: 이동 · 모서리/중앙점: 리사이즈 · ESC: 선택 해제 · Delete: 삭제(선택)</span>
-      </div>
-      <div class="viewer-wrap">
-        <img id="viewerImg" src="" alt="preview"/>
-        <canvas id="overlayCanvas"></canvas>
-      </div>
-      <pre id="meta" class="small">(프레임을 선택하면 박스 정보가 표시됩니다)</pre>
+<!-- 업로드 -->
+<div class="card upload-card">
+  <div class="col-header" style="margin-bottom:10px;">
+    <h3>📤 동영상 업로드</h3>
+    <div style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2);">
+      <div class="dot-idle" id="uploadDot"></div>
+      <span id="uploadStatus">대기 중</span>
     </div>
-    <div class="card">
-      <h3>Bounding BOX 정보</h3>
-      <table id="boxList"  class="thin-table">
-        <colgroup>
-          <col style="width:50px;">   <!-- ID -->
-          <col style="width:100px;">  <!-- 유형 -->
-          <col style="width:30px;">   <!-- conf -->
-          <col style="width:50px;">   <!-- x1 -->
-          <col style="width:50px;">   <!-- y1 -->
-          <col style="width:50px;">   <!-- x2 -->
-          <col style="width:50px;">   <!-- y2 -->
-          <col style="width:120px;">  <!-- 액션 -->
-        </colgroup>
+  </div>
+  <form id="uploadForm">
+    <div class="upload-row">
+      <input type="file" name="video" accept=".mp4,.mov,.avi,.mkv" required id="videoFile">
+      <button class="btn btn-primary" type="submit">▶ 업로드 &amp; 처리</button>
+    </div>
+  </form>
+  <div id="jobInfo" style="font-size:11px; color:var(--muted); margin-top:6px;"></div>
+
+  <!-- 업로드 중 로그 -->
+  <div id="logSection" style="margin-top:12px; display:none;">
+    <div style="font-size:12px; font-weight:600; color:var(--text2); margin-bottom:6px;">⏳ 처리 중... (자동으로 프레임을 추출하고 물체를 찾고 있습니다)</div>
+    <pre class="log-box" id="logBox" style="max-height:80px; font-size:11px;"></pre>
+  </div>
+</div>
+
+<!-- 컬럼 흐름 안내 -->
+<div class="col-flow">
+  <div style="font-size:11px; font-weight:600; color:#64748b; margin-right:10px; white-space:nowrap;">진행 순서</div>
+  <div class="col-flow-step active">
+    <div class="sn">①</div>
+    <div><strong style="color:#1d4ed8;">작업 선택</strong><div class="fn">동영상 행 클릭</div></div>
+  </div>
+  <div class="col-flow-arrow">↓</div>
+  <div class="col-flow-step">
+    <div class="sn">②</div>
+    <div><strong>장면 선택</strong><div class="fn">프레임 행 클릭</div></div>
+  </div>
+  <div class="col-flow-arrow" style="font-size:22px; padding:0 12px;">→</div>
+  <div class="col-flow-step">
+    <div class="sn">③</div>
+    <div><strong>이미지 확인</strong><div class="fn">박스 위치 확인</div></div>
+  </div>
+  <div class="col-flow-arrow">↓</div>
+  <div class="col-flow-step">
+    <div class="sn" style="background:#059669;color:#fff;">④</div>
+    <div><strong>영역 수정·저장</strong><div class="fn">잘못된 박스 수정</div></div>
+  </div>
+</div>
+
+<!-- Row 1: 작업목록 + 장면목록 나란히 -->
+<div class="lists-row">
+
+  <!-- ① 작업 목록 -->
+  <div class="card" style="padding:14px;">
+    <div class="col-header">
+      <h3><span class="col-step-num">①</span>작업 목록 <span style="font-size:11px;font-weight:400;color:var(--muted);">(동영상별)</span></h3>
+      <span class="badge badge-blue" id="job_count"></span>
+    </div>
+    <div class="tip-box" style="margin-bottom:10px;">
+      👆 동영상 행을 <strong>클릭</strong>하면 오른쪽에 장면 목록이 나타납니다
+    </div>
+    <div class="list-wrap">
+      <table class="table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>유형</th>
-            <th>conf</th>
-            <th>x1</th>
-            <th>y1</th>
-            <th>x2</th>
-            <th>y2</th>
-           <th>액션</th>
+            <th>동영상 파일명</th>
+            <th style="text-align:center">장면 수</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="boxTableBody"></tbody>
+        <tbody id="jobList"></tbody>
       </table>
-      <div class="small" id="boxMsg"></div>
+    </div>
+    <div class="pager" id="jobPageInd"></div>
   </div>
-</div>
 
+  <!-- ② 장면 목록 -->
+  <div class="card" style="padding:14px;">
+    <div class="col-header">
+      <h3><span class="col-step-num">②</span>장면 목록 <span style="font-size:11px;font-weight:400;color:var(--muted);">(프레임)</span></h3>
+    </div>
+    <div class="tip-box" style="margin-bottom:10px;">
+      👆 장면을 <strong>클릭</strong>하면 아래에 이미지와 박스가 표시됩니다
+    </div>
+    <div class="list-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>위치</th>
+            <th>번호</th>
+            <th style="text-align:center">인식 박스</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="frameList"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="pageInd"></div>
+  </div>
+
+</div><!-- /lists-row -->
+
+<!-- Row 2: 통합 뷰어 카드 (장면 미리보기 + 편집 + 박스 정보) -->
+<div class="card viewer-panel">
+  <div class="viewer-panel-header">
+    <h3>
+      <span class="col-step-num">③</span>
+      장면 확인 · 인식 영역 편집
+    </h3>
+    <span style="font-size:12px; color:var(--muted);">장면 목록에서 장면을 클릭하면 아래에 표시됩니다</span>
+  </div>
+  <div class="viewer-panel-body">
+
+    <!-- 왼쪽: 이미지 뷰어 -->
+    <div>
+      <div class="viewer-wrap">
+        <img id="viewerImg" src="" alt="② 장면 목록에서 장면을 클릭하세요" style="max-width:100%; display:block; border-radius:8px; border:1px solid var(--border);">
+        <canvas id="overlayCanvas"></canvas>
+      </div>
+      <pre id="meta" style="font-size:11px; color:var(--muted); margin-top:8px; white-space:pre-wrap;">(장면을 클릭하면 이미지가 여기에 표시됩니다)</pre>
+    </div>
+
+    <!-- 오른쪽: 편집 컨트롤 + 박스 정보 -->
+    <div class="viewer-right">
+
+      <!-- 편집 컨트롤 -->
+      <div style="background:var(--card2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px;">
+        <div style="font-size:12px; font-weight:600; color:var(--text2); margin-bottom:10px;">✏️ 인식 영역(박스) 편집</div>
+        <div class="edit-controls">
+          <label class="edit-toggle-label">
+            <input type="checkbox" id="editToggle"> 편집 모드 켜기
+          </label>
+          <button class="btn btn-sm btn-primary" id="addBoxBtn" disabled>+ 박스 추가</button>
+          <button class="btn btn-sm btn-success" id="saveBoxBtn" disabled>💾 저장</button>
+        </div>
+        <div class="edit-hint" id="editHint" style="display:none; margin-top:8px; font-size:11px; color:var(--muted);">
+          드래그: 이동 &nbsp;|&nbsp; 모서리: 크기 조정 &nbsp;|&nbsp; ESC: 해제 &nbsp;|&nbsp; Delete: 삭제
+        </div>
+      </div>
+
+      <!-- 박스 상세 정보 -->
+      <div>
+        <div class="col-header" style="margin-bottom:8px;">
+          <h3 style="font-size:12px;">📐 인식 박스 상세 정보</h3>
+          <span class="badge badge-muted" id="boxMsg"></span>
+        </div>
+        <div style="font-size:11px; color:var(--muted); margin-bottom:8px;">
+          <strong style="color:var(--text2);">물체 종류</strong> 드롭다운을 선택 후 <strong style="color:var(--accent2);">저장</strong> 클릭
+        </div>
+        <div class="box-table-wrap">
+          <table class="table box-table">
+            <thead>
+              <tr>
+                <th>물체 종류</th>
+                <th>정확도</th>
+                <th>시작점<br><span style="font-weight:400;text-transform:none;font-size:10px;letter-spacing:0;">(x1, y1)</span></th>
+                <th>끝점<br><span style="font-weight:400;text-transform:none;font-size:10px;letter-spacing:0;">(x2, y2)</span></th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="boxTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /viewer-right -->
+  </div><!-- /viewer-panel-body -->
+</div><!-- /viewer-panel -->
 
 <script>
-let currentJob = null;
-let lastFrameId = 0;
-let pollTimer = null;
+/* ── 상태 변수 ── */
+let currentJob = null, lastFrameId = 0, pollTimer = null;
+const limit = 10, plimit = 5;
 
-const limit = 10;
-const plimit = 5;
 const frameList = document.getElementById('frameList');
-const pageInd = document.getElementById('pageInd');
-const jobList = document.getElementById('jobList');
-const boxList = document.getElementById('boxList');
+const pageInd   = document.getElementById('pageInd');
+const jobList   = document.getElementById('jobList');
+const jobPageInd= document.getElementById('jobPageInd');
 const job_count = document.getElementById('job_count');
-
-
-const jobPageInd = document.getElementById('jobPageInd');
-
-const meta = document.getElementById('meta');
-
-const boxTBody = document.getElementById('boxTableBody');
-const boxMsg   = document.getElementById('boxMsg');
-
+const meta      = document.getElementById('meta');
+const boxTBody  = document.getElementById('boxTableBody');
+const boxMsg    = document.getElementById('boxMsg');
 const viewerImg = document.getElementById('viewerImg');
-const overlay = document.getElementById('overlayCanvas');
-
+const overlay   = document.getElementById('overlayCanvas');
 const editToggle= document.getElementById('editToggle');
 const saveBoxBtn= document.getElementById('saveBoxBtn');
 const editHint  = document.getElementById('editHint');
-
-var class_name = [
-  "person","bicycle","car","motorcycle","airplane","bus","train","truck","boat",
-  "traffic light","fire hydrant","stop sign","parking meter","bench",
-  "bird","cat","dog","horse","sheep","cow","elephant","bear","zebra","giraffe",
-  "backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard",
-  "sports ball","kite","baseball bat","baseball glove","skateboard","surfboard",
-  "tennis racket","bottle","wine glass","cup","fork","knife","spoon","bowl",
-  "banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza",
-  "donut","cake","chair","couch","potted plant","bed","dining table","toilet",
-  "tv","laptop","mouse","remote","keyboard","cell phone","microwave","oven",
-  "toaster","sink","refrigerator","book","clock","vase","scissors",
-  "teddy bear","hair drier","toothbrush",
-  "chicken","guard dog","goat","puppy","cat","crocodile","tiger","foodbin"
-];
-
-class_name = [
-  "선택",
-  "bin_10l_rect",
-  "bin_20l_rect",
-  "bin_60l_rect",
-  "bin_120l_rect",
-  "content",
-  ];
-
-
-function makeClassSelect(selectedIdx) {
-
-  let html = `<select class="inp-cls" style="width:120px">`;
-
-  class_name.forEach((name, idx) => {
-    const selected = (idx == selectedIdx) ? "selected" : "";
-    html += `<option value="${idx}" ${selected}>${name}</option>`;
-  });
-
-  html += `</select>`;
-
-  return html;
-}
-
-let currentBoxes = [];
-let currentOrigSize = {w:0, h:0};
-let selectedFrameId = null;
-let selectedJobId = null;
-let selectedJobPage =0;
-let selectedId = null;
-let dragging = null;               // {mode:'move'|'resize', handle:'nw'|'n'... , start:{mx,my}, startBox:{...}}
-let editMode = false;
-
-// === 유틸 ===
-const clamp = (v, lo, hi)=> Math.max(lo, Math.min(hi, v));
-const toInt = (v)=> Number.isFinite(+v) ? (v|0) : 0;
 const addBoxBtn = document.getElementById('addBoxBtn');
 
+/* 물체 종류 목록 */
+const class_name = ["선택 안 함", "10L 사각 수거함", "20L 사각 수거함", "60L 사각 수거함", "120L 사각 수거함", "내용물"];
 
-function highlightSelectedRow1(clickedRow) {
-  // 기존 선택된 행 제거
-  document.querySelectorAll('#jobList tr').forEach(row => {
-    row.classList.remove('selected-row');
+function makeClassSelect(selectedIdx) {
+  let html = `<select class="inp-cls">`;
+  class_name.forEach((name, idx) => {
+    html += `<option value="${idx}" ${idx==selectedIdx?'selected':''}>${name}</option>`;
   });
-
-  // 클릭된 행만 선택
-  clickedRow.classList.add('selected-row');
+  return html + `</select>`;
 }
 
-function highlightSelectedRow2(clickedRow) {
-  // 기존 선택된 행 제거
-  document.querySelectorAll('#frameList tr').forEach(row => {
-    row.classList.remove('selected-row');
-  });
+let currentBoxes=[], currentOrigSize={w:0,h:0};
+let selectedFrameId=null, selectedJobId=null, selectedJobPage=0;
+let selectedId=null, dragging=null, editMode=false;
+const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+const toInt=(v)=>Number.isFinite(+v)?(v|0):0;
 
-  // 클릭된 행만 선택
-  clickedRow.classList.add('selected-row');
+function highlightRow(tbody, row) {
+  tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('selected-row'));
+  row.classList.add('selected-row');
 }
 
-function highlightSelectedRowId(selected_id) {
-  document.querySelectorAll('#boxTableBody tr').forEach(row => {
-    // 먼저 전체에서 선택 제거
-    row.classList.remove('selected-row');
-
-    // dataset.id 값이 selected_id와 같은 경우만 선택 적용
-    if (row.dataset.id == selected_id) {
-      row.classList.add('selected-row');
-    }
-  });
-}
-
-
-// 편집 모드일 때만 활성화
-editToggle.addEventListener('change', ()=>{
-  editMode = editToggle.checked;
-  editHint.style.display = editMode ? '' : 'none';
-  overlay.style.pointerEvents = editMode ? 'auto' : 'none';
-  addBoxBtn.disabled = !editMode;
-  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+/* 편집 모드 토글 */
+editToggle.addEventListener('change',()=>{
+  editMode=editToggle.checked;
+  editHint.style.display=editMode?'':'none';
+  overlay.style.pointerEvents=editMode?'auto':'none';
+  addBoxBtn.disabled=!editMode;
+  draw();
 });
 
-// 박스 추가 버튼 클릭 시
-addBoxBtn.addEventListener('click', ()=>{
+/* 박스 추가 */
+addBoxBtn.addEventListener('click',()=>{
   if(!editMode) return;
-  if(currentOrigSize.w===0 || currentOrigSize.h===0){
-    alert("프레임을 먼저 선택하세요.");
-    return;
-  }
-  // 기본 크기의 박스 (이미지 가운데 100x100)
-  const W = currentOrigSize.w, H = currentOrigSize.h;
-  const newBox = {
-
-    id: '', // 임시 ID
-    cls: '87',
-    conf: 1.0,
-    x1: Math.max(0, Math.floor(W/2 - 50)),
-    y1: Math.max(0, Math.floor(H/2 - 50)),
-    x2: Math.min(W, Math.floor(W/2 + 50)),
-    y2: Math.min(H, Math.floor(H/2 + 50)),
-    frame_id : selectedFrameId,
-  };
-  currentBoxes.push(newBox);
-  selectedId = newBox.id;
-  saveBoxBtn.disabled = false;
-  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, W, H);
-  renderBoxTable(currentBoxes);  // 테이블에도 반영
+  if(!currentOrigSize.w){alert("먼저 장면을 선택해 주세요.");return;}
+  const W=currentOrigSize.w, H=currentOrigSize.h;
+  const b={id:'',cls:'1',conf:1.0,
+    x1:Math.max(0,Math.floor(W/2-50)), y1:Math.max(0,Math.floor(H/2-50)),
+    x2:Math.min(W,Math.floor(W/2+50)), y2:Math.min(H,Math.floor(H/2+50)),
+    frame_id:selectedFrameId};
+  currentBoxes.push(b); selectedId=b.id; saveBoxBtn.disabled=false;
+  draw(); renderBoxTable(currentBoxes);
 });
 
-// 이미지 ↔ 화면 스케일 계산
-function computeLayout(imgEl){
-  const rect = imgEl.getBoundingClientRect();
-  const dispW = Math.round(rect.width || imgEl.clientWidth || imgEl.naturalWidth);
-  const dispH = Math.round(rect.height || imgEl.clientHeight || imgEl.naturalHeight);
-  const dpr = window.devicePixelRatio || 1;
-  const sx = dispW / currentOrigSize.w;
-  const sy = dispH / currentOrigSize.h;
-  return {dispW, dispH, dpr, sx, sy};
+/* 레이아웃 계산 */
+function computeLayout(el){
+  const r=el.getBoundingClientRect();
+  const dW=Math.round(r.width||el.naturalWidth);
+  const dH=Math.round(r.height||el.naturalHeight);
+  const dpr=window.devicePixelRatio||1;
+  return{dispW:dW,dispH:dH,dpr,sx:dW/currentOrigSize.w,sy:dH/currentOrigSize.h};
+}
+function screenToImage(x,y){
+  const{sx,sy}=computeLayout(viewerImg);
+  const r=overlay.getBoundingClientRect();
+  return{ix:(x-r.left)/sx,iy:(y-r.top)/sy};
 }
 
-function screenToImage(x, y){
-  const {dispW, dispH, sx, sy} = computeLayout(viewerImg);
-  // overlayCanvas는 viewerImg 위에 같은 CSS 크기이므로, offset로 변환
-  const r = overlay.getBoundingClientRect();
-  const px = x - r.left;
-  const py = y - r.top;
-  return {ix: px / sx, iy: py / sy};
-}
-
-
-function renderBoxTable(boxes, frameMeta){
-  boxTBody.innerHTML = '';
-  if(!Array.isArray(boxes) || boxes.length === 0){
-    boxMsg.textContent = '박스가 없습니다.';
-    return;
-  }
-  boxMsg.textContent = '';
-
-  boxes.forEach(addBoxRow);
-}
-
-function addBoxRow(b){
-
-  const tr = document.createElement('tr');
-  tr.dataset.id = b.id;
-
-  tr.innerHTML = `
-    <td style="width:50px;">${b.id}</td>
-    <td>${makeClassSelect(b.cls)}</td>
-    <td><input class="inp-conf" type="number" step="0.01" value="${b.conf ?? ''}" style="width:50px;"></td>
-    <td><input class="inp-x1"   type="number" step="1"    value="${b.x1 ?? 0}" style="width:50px;"></td>
-    <td><input class="inp-y1"   type="number" step="1"    value="${b.y1 ?? 0}" style="width:50px;"></td>
-    <td><input class="inp-x2"   type="number" step="1"    value="${b.x2 ?? 0}" style="width:50px;"></td>
-    <td><input class="inp-y2"   type="number" step="1"    value="${b.y2 ?? 0}" style="width:50px;"></td>
-    <td style="width:150px;">
-      <button class="btn btn-primary btn-update" type="button">저장</button>
-      <button class="btn btn-primary btn-delete" type="button">삭제</button>
-    </td>
-  `;
-
-
-  boxTBody.appendChild(tr);
-}
-
-boxTBody.addEventListener('click', async (e)=>{
-
-if(!e.target.classList.contains('btn-update')) return;
-if(!confirm('저장하시겠습니까?')) return;
-
-const tr = e.target.closest('tr');
-const id = tr.dataset.id;
-
-const payload = {
-  cls : tr.querySelector('.inp-cls').value.trim(),
-  conf: (v=> Number.isFinite(v)? v : null)(parseFloat(tr.querySelector('.inp-conf').value)),
-  x1  : parseInt(tr.querySelector('.inp-x1').value,10),
-  y1  : parseInt(tr.querySelector('.inp-y1').value,10),
-  x2  : parseInt(tr.querySelector('.inp-x2').value,10),
-  y2  : parseInt(tr.querySelector('.inp-y2').value,10),
-  frame_id : selectedFrameId,
-};
-//alert(JSON.stringify(payload))
-try{
-   var call_url =`/api/box/${id}`;
-   if(id == '' )
-      call_url = '/api/box/insert';
-
-  const res = await fetch(call_url, {
-    method: 'PATCH',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify(payload)
+/* 박스 테이블 렌더 */
+function renderBoxTable(boxes){
+  boxTBody.innerHTML='';
+  if(!boxes||!boxes.length){boxMsg.textContent='없음';return;}
+  boxMsg.textContent=boxes.length+'개';
+  boxes.forEach(b=>{
+    const tr=document.createElement('tr');
+    tr.dataset.id=b.id;
+    const inp = (cls,val,w)=>`<input class="${cls}" type="number" value="${val??0}" style="width:${w}px;background:#fff;border:1px solid var(--border);color:var(--text);border-radius:4px;padding:2px 3px;font-size:11px;text-align:center;display:block;margin:1px 0;">`;
+    tr.innerHTML=`
+      <td>${makeClassSelect(b.cls)}</td>
+      <td>${inp('inp-conf',b.conf,46)}</td>
+      <td style="vertical-align:top;">
+        ${inp('inp-x1',b.x1,54)}
+        ${inp('inp-y1',b.y1,54)}
+      </td>
+      <td style="vertical-align:top;">
+        ${inp('inp-x2',b.x2,54)}
+        ${inp('inp-y2',b.y2,54)}
+      </td>
+      <td style="white-space:nowrap;vertical-align:top;padding-top:4px;">
+        <button class="btn btn-sm btn-success btn-update" style="padding:3px 8px;display:block;margin-bottom:3px;">저장</button>
+        <button class="btn btn-sm btn-danger btn-delete" style="padding:3px 8px;display:block;">삭제</button>
+      </td>`;
+    boxTBody.appendChild(tr);
   });
-  if(!res.ok){
-    const msg = await res.text();
-    alert('업데이트 실패: ' + msg);
-    return;
-  }
-  // 성공 UI
-  e.target.textContent = '저장됨';
-  setTimeout(()=> e.target.textContent = '저장', 900);
-
-  // 미리보기 오버레이 새로고침(있다면)
-  if (typeof selectFrame === 'function' && viewerImg?.src) {
-    // 현재 선택된 프레임 다시 로드(overlay cache bust)
-    const qs = new URL(viewerImg.src, location.origin);
-    viewerImg.src = qs.pathname + '?t=' + Date.now();
-  }
-}catch(err){
-  console.error(err);
-  alert('업데이트 중 에러: ' + err);
 }
-});
 
-// 행의 업데이트 버튼 처리(이벤트 위임)
-boxTBody.addEventListener('click', async (e)=>{
-
-  if(!e.target.classList.contains('btn-delete')) return;
-  if(!confirm('삭제하시겠습니까?')) return;
-
-  const tr = e.target.closest('tr');
-  const id = tr.dataset.id;
-
-  const payload = {
-    cls : tr.querySelector('.inp-cls').value.trim(),
-    conf: (v=> Number.isFinite(v)? v : null)(parseFloat(tr.querySelector('.inp-conf').value)),
-    x1  : parseInt(tr.querySelector('.inp-x1').value,10),
-    y1  : parseInt(tr.querySelector('.inp-y1').value,10),
-    x2  : parseInt(tr.querySelector('.inp-x2').value,10),
-    y2  : parseInt(tr.querySelector('.inp-y2').value,10),
-  };
-  //alert(JSON.stringify(payload))
-  try{
-    const res = await fetch(`/api/box/${id}/delete`, {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(payload)
-    });
-    if(!res.ok){
-      const msg = await res.text();
-      alert('업데이트 실패: ' + msg);
-      return;
-    }
-    // 성공 UI
-    e.target.textContent = '저장됨';
-    selectFrame(selectedFrameId)
-    setTimeout(()=> e.target.textContent = '업데이트', 900);
-
-    // 미리보기 오버레이 새로고침(있다면)
-    if (typeof selectFrame === 'function' && viewerImg?.src) {
-      // 현재 선택된 프레임 다시 로드(overlay cache bust)
-      const qs = new URL(viewerImg.src, location.origin);
-      viewerImg.src = qs.pathname + '?t=' + Date.now();
-    }
-  }catch(err){
-    console.error(err);
-    alert('업데이트 중 에러: ' + err);
+boxTBody.addEventListener('click',async(e)=>{
+  if(e.target.classList.contains('btn-update')){
+    if(!confirm('이 박스 정보를 저장하시겠습니까?'))return;
+    const tr=e.target.closest('tr'),id=tr.dataset.id;
+    const p={cls:tr.querySelector('.inp-cls').value,conf:parseFloat(tr.querySelector('.inp-conf').value)||null,
+      x1:+tr.querySelector('.inp-x1').value,y1:+tr.querySelector('.inp-y1').value,
+      x2:+tr.querySelector('.inp-x2').value,y2:+tr.querySelector('.inp-y2').value,frame_id:selectedFrameId};
+    const url=id===''?'/api/box/insert':`/api/box/${id}`;
+    const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    if(!r.ok){alert('저장 실패: '+await r.text());return;}
+    e.target.textContent='✓';setTimeout(()=>e.target.textContent='저장',900);
+  }
+  if(e.target.classList.contains('btn-delete')){
+    if(!confirm('이 박스를 삭제하시겠습니까?'))return;
+    const tr=e.target.closest('tr'),id=tr.dataset.id;
+    const r=await fetch(`/api/box/${id}/delete`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:'{}'});
+    if(!r.ok){alert('삭제 실패: '+await r.text());return;}
+    selectFrame(selectedFrameId);
   }
 });
 
-document.getElementById('uploadForm').addEventListener('submit', async (e)=>{
+/* 업로드 */
+document.getElementById('uploadForm').addEventListener('submit',async(e)=>{
   e.preventDefault();
-  const fd = new FormData(e.target);
-  const res = await fetch('/api/upload', { method:'POST', body: fd });
-  const data = await res.json();
-  if(data.error){ alert(data.error); return; }
-  currentJob = data.job_id;
-  lastFrameId = 0;
-  document.getElementById('jobIdLabel').textContent = currentJob;
-  document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
-  frameList.innerHTML = '';
-  viewerImg.src = '';
-  meta.textContent = '(프레임을 선택하면 박스 정보가 표시됩니다)';
+  const fd=new FormData(e.target);
+  document.getElementById('uploadDot').className='dot-running';
+  document.getElementById('uploadStatus').textContent='처리 중...';
+  document.getElementById('logSection').style.display='';
+  const r=await fetch('/api/upload',{method:'POST',body:fd});
+  const d=await r.json();
+  if(d.error){alert(d.error);return;}
+  currentJob=d.job_id; lastFrameId=0;
+  document.getElementById('jobInfo').textContent='작업 ID: '+currentJob;
+  frameList.innerHTML=''; viewerImg.src='';
   startPolling();
 });
 
 function startPolling(){
-  if(pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(async ()=>{
-    if(!currentJob) return;
-    // 상태/로그
-    const sres = await fetch('/api/status/'+currentJob);
-    const stat = await sres.json();
-    document.getElementById('statusBox').textContent = '상태: ' + stat.status + ' (pid='+(stat.pid ?? 'N/A')+', rc='+(stat.returncode ?? 'N/A')+')';
-    const lres = await fetch('/api/log/'+currentJob+'?tail=200');
-    document.getElementById('logBox').textContent = await lres.text();
-
-
-    // 프레임 새로고침
-
-    const fres = await fetch('/api/frames?job_id='+currentJob+'&after='+lastFrameId+'&limit=100');
-    const arr = await fres.json();
-    if(Array.isArray(arr) && arr.length){
-      arr.forEach(addFrameItem);
-      lastFrameId = arr[arr.length-1].id;
+  if(pollTimer)clearInterval(pollTimer);
+  pollTimer=setInterval(async()=>{
+    if(!currentJob)return;
+    const s=await(await fetch('/api/status/'+currentJob)).json();
+    document.getElementById('uploadDot').className=s.status==='running'?'dot-running':'dot-idle';
+    document.getElementById('uploadStatus').textContent=s.status==='running'?'처리 중...':'완료';
+    const l=await(await fetch('/api/log/'+currentJob+'?tail=200')).text();
+    document.getElementById('logBox').textContent=l;
+    const fr=await(await fetch('/api/frames?job_id='+currentJob+'&after='+lastFrameId+'&limit=100')).json();
+    if(Array.isArray(fr)&&fr.length){fr.forEach(addFrameItem);lastFrameId=fr[fr.length-1].id;}
+    if(['completed','failed'].includes(s.status)){
+      clearInterval(pollTimer);
+      if(s.status==='completed'){
+        document.getElementById('uploadStatus').textContent='✅ 완료! 왼쪽 목록에서 동영상을 클릭하세요.';
+        getJobList(0);
+      }
     }
-    if(['completed','failed'].includes(stat.status)){ clearInterval(pollTimer); }
-  }, 1200);
+  },1200);
 }
 
-async function deleteFrame(id)
-{
- //alert(job_id)
- if(!confirm("삭제하시겠습니까? \n 소속된 박스가 모두 삭제됩니다."))
-  {
-    return ;
-  }
-  const sres = await fetch('/api/frame/'+id+'/delete');
-  const stat = await sres.json();
-
-  if(stat.ok)
-  {
-    alert("삭제되었습니다. "+stat.id);
-    getFrameList(selectedJobId,selectedJobPage);
-  }
-  else  alert("삭제 실패하였습니다.")
+async function deleteFrame(id){
+  if(!confirm("이 장면을 삭제하시겠습니까?\n해당 장면의 박스도 함께 삭제됩니다."))return;
+  const r=await fetch('/api/frame/'+id+'/delete');
+  const s=await r.json();
+  if(s.ok)getFrameList(selectedJobId,selectedJobPage);
+  else alert("삭제에 실패했습니다.");
 }
 
-function addFrameItem(item) {
-  const tbody = document.getElementById('frameList');
-
-  const tr = document.createElement('tr');
-  tr.dataset.id = item.id;
-
-  // 행 클릭 시 프레임 선택
-  tr.onclick = () => selectFrame(item.id);
-  tr.addEventListener('click', () => {
-    highlightSelectedRow2(tr);
-    selectFrame(item.id);
-  });
-  tr.innerHTML = `
-    <td>${item.pos_desc}</td>
-    <td>${item.frame_index})${item.image_path.split(/(\\|\/)/g).pop()}</td>
-    <td>${item.box_count}개</td>
-    <td>
-      <button class="btn2 btn-primary delete-btn">삭제</button>
-    </td>
-  `;
-
-  // 삭제 버튼 이벤트 (행 클릭과 구분)
-  tr.querySelector('.delete-btn').addEventListener('click', (e) => {
-    e.stopPropagation(); // selectFrame 방지
-    deleteFrame(item.id);
-  });
-
-  tbody.appendChild(tr);
-}
-
-
-function addFrameItem2(item){
-  const li = document.createElement('li');
-  li.dataset.id = item.id;
-  li.innerHTML = `${item.pos_desc}] ${item.frame_index} 프레임 <span class="small">(박스:${item.box_count}개 )</span>`
-              +'<button class="btn2 btn-primary delete-btn" >삭제</button>'
-  ;
-  li.onclick = ()=> selectFrame(item.id);
-  li.querySelector('.delete-btn').addEventListener('click', (e)=>{
-    e.stopPropagation(); // selectFrame 실행 방지
-    deleteFrame(item.id);
-  });
-
-  frameList.appendChild(li);
+function addFrameItem(item){
+  const tr=document.createElement('tr');
+  tr.dataset.id=item.id;
+  tr.addEventListener('click',()=>{highlightRow(frameList,tr);selectFrame(item.id);});
+  tr.innerHTML=`
+    <td style="color:var(--muted)">${item.pos_desc}</td>
+    <td>${item.frame_index}번</td>
+    <td style="text-align:center"><span class="badge ${item.box_count>0?'badge-green':'badge-muted'}">${item.box_count}개</span></td>
+    <td><button class="btn btn-sm btn-danger delete-btn" style="padding:2px 7px;">삭제</button></td>`;
+  tr.querySelector('.delete-btn').addEventListener('click',e=>{e.stopPropagation();deleteFrame(item.id);});
+  frameList.appendChild(tr);
 }
 
 async function selectFrame(frameId){
-  // 활성 표시
-  [...frameList.children].forEach(li => li.classList.toggle('active', li.dataset.id == frameId));
-  //alert(selectedFrameId +"====="+frameId)
-  selectedFrameId = frameId;
-  const res = await fetch('/api/frame/'+frameId);
-  const d = await res.json();
-
-  if(d.error){ alert(d.error); return; }
-  // 서버에서 그려준 오버레이 이미지로 교체(캐시 방지)
-  viewerImg.onload = () => {
-
-    currentBoxes = d.boxes || [];
-
-    currentOrigSize = {w: d.width, h: d.height};
-    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, d.width, d.height);
-    //drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, w, h);
+  selectedFrameId=frameId;
+  const r=await fetch('/api/frame/'+frameId);
+  const d=await r.json();
+  if(d.error){alert(d.error);return;}
+  viewerImg.onload=()=>{
+    currentBoxes=d.boxes||[];
+    currentOrigSize={w:d.width,h:d.height};
+    draw();
   };
-
-  viewerImg.src = d.overlay_url + '?t=' + Date.now();
-  viewerImg.alt =  d.overlay_url + '?t=' + Date.now();
-  const lines = [];
-  lines.push(d.overlay_url )
-  lines.push(`frame_id=${d.id}, index=${d.frame_index}, size=${d.width}x${d.height}`);
-  //boxList.innerHTML=''
-  d.boxes.forEach((b,i)=>{
-    lines.push(`[${i}] ${b.cls} conf=${(b.conf??0).toFixed(2)} box=(${b.x1},${b.y1},${b.x2},${b.y2})`);
-
-  });
-  renderBoxTable(d.boxes)
-  meta.textContent = lines.join('\n');
-
-  //const resb = await fetch('/api/boxes/'+frameId);
-  //const db = await res.json();
-
+  viewerImg.src=d.overlay_url+'?t='+Date.now();
+  renderBoxTable(d.boxes);
+  meta.textContent=`장면 ID: ${d.id}  ·  크기: ${d.width}×${d.height}px`;
 }
 
-/*
-function addBoxItem(item){
-  const li = document.createElement('li');
-  li.dataset.id = item.id;
-  li.innerHTML = " <form action='/api/updataBoxes': ${item.id}  <span class='small'>("
-                  +item.frame_id+","+item.id
-                  ") </span> </form>";
-
-  boxList.appendChild(li);
-}
-*/
-
-async function  deleteJob(job_id)
-{
-  //alert(job_id)
-  if(!confirm("삭제하시겠습니까? \n프레임 및 박스가 모두 삭제됩니다."))
-  {
-    return ;
-  }
-  const sres = await fetch('/api/job/'+job_id+'/delete');
-  const stat = await sres.json();
-
-  if(stat.ok)
-  {
-    alert("삭제되었습니다.");
-    location.href="/data"
-  }
-  else  alert("삭제 실패하였습니다.")
-
+async function deleteJob(job_id){
+  if(!confirm("이 동영상 작업을 삭제하시겠습니까?\n모든 장면과 박스 데이터가 삭제됩니다."))return;
+  const r=await fetch('/api/job/'+job_id+'/delete');
+  const s=await r.json();
+  if(s.ok){alert("삭제됐습니다.");location.href="/data";}
+  else alert("삭제에 실패했습니다.");
 }
 
-function addJobItem(item){
-  const tr = document.createElement("tr");
-
-// 클릭 시 프레임 보기
-tr.onclick = () => getFrameList(item.job_id, 0);
-tr.addEventListener('click', () => {
-    highlightSelectedRow1(tr);
-    selectFrame(item.id);
-  });
-// 파일명
-const tdName = document.createElement("td");
-tdName.textContent = item.file_name;
-
-// TS
-const tdTs = document.createElement("td");
-tdTs.textContent = item.ts;
-
-// JOB ID
-const tdJobId = document.createElement("td");
-tdJobId.textContent = item.job_id;
-
-// 프레임 수
-const tdCount = document.createElement("td");
-tdCount.textContent = item.total_count;
-
-// 재추출 버튼
-const tdExtract = document.createElement("td");
-tdExtract.innerHTML = `
-  <button class="btn2 btn-primary" onclick="event.stopPropagation(); reExtract('${item.job_id}')">
-    재추출 [${item.ext_num}]
-  </button>
-`;
-
-// 삭제 버튼
-const tdDelete = document.createElement("td");
-tdDelete.innerHTML = `
-  <button class="btn2 btn-primary" onclick="event.stopPropagation(); deleteJob('${item.job_id}')">
-    삭제
-  </button>
-`;
-
-tr.appendChild(tdCount);
-tr.appendChild(tdName);
-tr.appendChild(tdTs);
-tr.appendChild(tdJobId);
-
-tr.appendChild(tdExtract);
-tr.appendChild(tdDelete);
-
-jobList.appendChild(tr);
-
-/*
-  const li = document.createElement('li');
-  li.dataset.id = item.id;
-  li.innerHTML = ` <span class="small">[${item.file_name}]/${item.ts} / [${item.job_id}] / 프레임수 (${item.total_count})</span>`
-  +'<button class="btn2 btn-primary"  onclick="reExtract(\''+item.job_id+'\')">재추출 ['+item.ext_num+']</button>'
-  +'<button class="btn2 btn-primary"  onclick="deleteJob(\''+item.job_id+'\')">삭제</button>'
-  ;
-  li.onclick = ()=> getFrameList(item.job_id,0);
-  jobList.appendChild(li);
-  */
+async function reExtract(job_id){
+  try{document.body.style.cursor='wait';const s=await(await fetch('/api/re_extract/'+job_id)).json();alert(JSON.stringify(s));}
+  catch(e){alert('오류: '+e);}
+  finally{document.body.style.cursor='';}
 }
 
-async function  reExtract(job_id)
-{
-  try {
-    // 대기 커서로 변경
-    document.body.style.cursor = 'wait';
-
-    const sres = await fetch('/api/re_extract/' + job_id);
-    const stat = await sres.json();
-
-    alert(stat); // ← 기존 alert(val) 는 오류라 stat으로 수정
-  } catch (e) {
-    console.error(e);
-    alert('오류가 발생했습니다.');
-  } finally {
-    // 작업 완료 후 원래 커서로 복구
-    document.body.style.cursor = 'default';
+const jlimit=5;
+async function getJobList(page){
+  jobList.innerHTML='';jobPageInd.innerHTML='';
+  const cnt=(await(await fetch('/api/get_job_cnt')).json()).total_count;
+  job_count.textContent=cnt+'개';
+  buildPager(jobPageInd,page,Math.ceil(cnt/jlimit),plimit,p=>getJobList(p));
+  const arr=await(await fetch('/api/get_job_list?page='+page+'&limit='+jlimit)).json();
+  let firstId=-1;
+  if(Array.isArray(arr)&&arr.length){
+    arr.forEach(item=>{
+      if(firstId<0)firstId=item.job_id;
+      const tr=document.createElement('tr');
+      tr.onclick=()=>{highlightRow(jobList,tr);getFrameList(item.job_id,0);};
+      tr.innerHTML=`
+        <td><span style="font-weight:500;font-size:12px;">${item.file_name}</span><br><span style="font-size:10px;color:var(--muted)">${item.ts}</span></td>
+        <td style="text-align:center"><span class="badge badge-blue">${item.total_count}</span></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm" onclick="event.stopPropagation();reExtract('${item.job_id}')" style="font-size:11px;padding:3px 7px;">재추출</button>
+          <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteJob('${item.job_id}')" style="font-size:11px;padding:3px 7px;margin-top:3px;">삭제</button>
+        </td>`;
+      jobList.appendChild(tr);
+    });
   }
+  if(firstId>0)getFrameList(firstId,0);
 }
 
-async function getJobList2(page)
-{
-
-  jobList.innerHTML='';
-  jobPageInd.innerHTML='';
-
-  var job_id=-1
-  const res = await fetch('/api/get_job_cnt');
-  const val = await res.json();
-  const cnt = val.total_count;
-  const pageCnt = Math.round(cnt / limit) +1;
-  const numbers = Array.from({ length: pageCnt }, (_, i) => i );
-  // forEach 루프를 사용하여 각 숫자를 출력
-  numbers.forEach(number => {
-    const li = document.createElement('span');
-    if(page == number)
-    {
-      li.innerHTML = '<span class="">'+(number+1)+'</span>';
-    }
-    else {
-      li.innerHTML = '<span class="small">'+(number+1)+'</span>';
-      li.onclick = ()=> getJobList(number);
-    }
-    jobPageInd.appendChild(li)
-  });
-
-  const res2 = await fetch('/api/get_job_list?page='+page+'&limit='+limit);
-  const arr = await res2.json();
-  if(Array.isArray(arr) && arr.length){
-    arr.forEach(addJobItem);
-    if(job_id<0)
-      job_id = arr[arr.length-1].job_id;
-    lastFrameId = arr[arr.length-1].id;
-  }
-  if(job_id>0)
-    getFrameList(job_id, 0);
-
-
-}
-const jlimit =5
-async function getJobList(page)
-{
-  //alert("getFrameInfo "+ job_id)
-  jobList.innerHTML='';
-  jobPageInd.innerHTML='';
-
-  var job_id=-1
-  const res = await fetch('/api/get_job_cnt');
-  const val = await res.json();
-  const cnt = val.total_count;
-  job_count.innerHTML =" (총건수 :"+cnt+")"
-  const pageCnt = Math.round(cnt / jlimit) ;
-
-  const numbers = Array.from({ length: pageCnt }, (_, i) => i );
-  // forEach 루프를 사용하여 각 숫자를 출력
-  //맨처음으로
-
-  var vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [<<] </span>';
-  if(page>0)
-    vli.onclick = ()=> getJobList(0);
-    jobPageInd.appendChild(vli)
- // 다음페이지로
-  vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [<] </span>';
-  var vpage = page
-  if(pageCnt - 1 > page && page >= 5)
-  {
-    vpage = vpage - plimit
-    vli.onclick = ()=> getJobList( vpage);
-  }
-  jobPageInd.appendChild(vli)
-
-  numbers.forEach(number => {
-    const li = document.createElement('span');
-    if(page == number)
-    {
-      li.innerHTML = '<span class="">'+(number+1)+'</span>';
-    }
-    else {
-      li.innerHTML = '<span class="small">['+(number+1)+']</span>';
-      li.onclick = ()=> getJobList(number);
-    }
-    jobPageInd.appendChild(li)
-  });
-
-
- // 다음페이지로
-  vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [>] </span>';
-  var vpage = page
-  if(pageCnt - 1 > page)
-  {
-    vpage = vpage + plimit
-    vli.onclick = ()=> getJobList( vpage );
-  }
-  jobPageInd.appendChild(vli)
-
-  vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [>>] </span>';
-
-  var sPage = Math.trunc(pageCnt / plimit)
-  if(page < sPage * plimit)
-    vli.onclick = ()=> getJobList( (sPage-1) * plimit);
-  jobPageInd.appendChild(vli)
-
-  const res2 = await fetch('/api/get_job_list?page='+page+'&limit='+jlimit);
-  const arr = await res2.json();
-  if(Array.isArray(arr) && arr.length){
-    arr.forEach(addJobItem);
-    if(job_id<0)
-      job_id = arr[arr.length-1].job_id;
-    lastFrameId = arr[arr.length-1].id;
-  }
-  if(job_id>0)
-    getFrameList(job_id, 0 );
+async function getFrameList(job_id,page){
+  selectedJobId=job_id;selectedJobPage=page;
+  pageInd.innerHTML='';frameList.innerHTML='';
+  const cnt=(await(await fetch('/api/get_frame_cnt?job_id='+job_id)).json()).total_count;
+  buildPager(pageInd,page,Math.ceil(cnt/limit),plimit,p=>getFrameList(job_id,p));
+  const arr=await(await fetch('/api/frames_all?job_id='+job_id+'&page='+page+'&limit='+limit)).json();
+  if(Array.isArray(arr)&&arr.length){arr.forEach(addFrameItem);lastFrameId=arr[arr.length-1].id;}
 }
 
-async function getFrameList(job_id, page)
-{
-  //alert("get page   ---> "+page);
-  selectedJobId = job_id
-  selectedJobPage = page
-  pageInd.innerHTML=''
-  frameList.innerHTML=''
-  jobIdLabel.innerHTML=job_id
-  const res = await fetch('/api/get_frame_cnt?job_id='+job_id);
-  const val = await res.json();
-  //alert(JSON.stringify(val))
-  const cnt = val.total_count;
-  jobIdLabel.innerHTML=job_id +"<br> 프레임수 "+cnt
-  var pageCnt = Math.trunc(cnt / limit);
-  // limit는 표시하는 갯수
-  if(cnt%limit != 0) pageCnt = pageCnt +1;
-
-  const numbers = Array.from({ length: pageCnt }, (_, i) => i );
-  // forEach 루프를 사용하여 각 숫자를 출력
-  //맨처음으로
-  var vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [<<] </span>';
-  if(page>0)
-    vli.onclick = ()=> getFrameList(job_id, 0);
-  pageInd.appendChild(vli)
- // 다음페이지로
-  vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [<] </span>';
-  var vpage = page;
-  var vpage1=page
-
-  if(pageCnt - 1 > page && page >= plimit)
-  {
-    vpage1 = page - plimit ;
-    // 주의사항 : 변수는 onclick에 매핑시키면 아래에서 변하면 같이 변하므로 다르게 주어야함
-    vli.onclick = ()=> getFrameList(job_id, vpage1);
-  }
-  pageInd.appendChild(vli)
-
-  numbers.forEach(number => {
-
-    if(  Math.trunc(page/plimit)*plimit <= number && number < (Math.trunc(page/plimit)+1)*plimit  )
-    {
-      const li = document.createElement('span');
-      if(page == number)
-      {
-        li.innerHTML = '<span class="">'+(number+1)+'</span>';
-      }
-      else {
-        li.innerHTML = ' <span class="small" >['+(number+1)+']</span>';
-        li.onclick = ()=> getFrameList(job_id, number);
-      }
-      pageInd.appendChild(li)
-    }
-  });
-
-  const fres = await fetch('/api/frames_all?job_id='+job_id+'&page='+page+'&limit='+limit);
-  const arr = await fres.json();
-  if(Array.isArray(arr) && arr.length){
-    arr.forEach(addFrameItem);
-    lastFrameId = arr[arr.length-1].id;
-  }
-
- // 다음페이지로
-  vli2 = document.createElement('span');
-  vli2.innerHTML = ' <span class="small" > [>] </span>';
-  var vpage = page;
-
-  if(pageCnt - 1 > page)
-  {
-    vpage = page + plimit;
-    vli2.onclick = ()=> getFrameList(job_id, vpage);
-  }
-  pageInd.appendChild(vli2)
-  vli = document.createElement('span');
-  vli.innerHTML = ' <span class="small" > [>>] </span>';
-
-  var sPage = Math.trunc(pageCnt / plimit)
-  if( sPage > 0)
-  {
-    vli.onclick = ()=> getFrameList(job_id,(sPage-1)*plimit);
-  }
-  pageInd.appendChild(vli)
-
-
+function buildPager(container,page,pageCnt,plimit,onClick){
+  container.innerHTML='';if(!pageCnt)return;
+  const mk=(label,p,cur)=>{const s=document.createElement('span');s.textContent=label;if(cur)s.classList.add('cur');else s.onclick=()=>onClick(p);container.appendChild(s);};
+  if(page>0)mk('«',0,false);
+  if(page>=plimit)mk('‹',page-plimit,false);
+  const st=Math.floor(page/plimit)*plimit;
+  for(let i=st;i<Math.min(st+plimit,pageCnt);i++)mk(i+1,i,i===page);
+  if(page+plimit<pageCnt)mk('›',page+plimit,false);
 }
 
-async function init()
-{
-  var job_id = getJobList(0);
-}
+/* ── Canvas 그리기 ── */
+function draw(){drawBoxesOnCanvas(viewerImg,overlay,currentBoxes,currentOrigSize.w,currentOrigSize.h);}
 
-
-// === 렌더: 박스 + 선택 강조 + 리사이즈 핸들 ===
-function drawBoxesOnCanvas(imgEl, canvasEl, boxes, origW, origH){
-  const {dispW, dispH, dpr, sx, sy} = computeLayout(imgEl);
-
-  canvasEl.style.width = dispW + 'px';
-  canvasEl.style.height = dispH + 'px';
-  canvasEl.width  = Math.max(1, Math.round(dispW * dpr));
-  canvasEl.height = Math.max(1, Math.round(dispH * dpr));
-
-  const ctx = canvasEl.getContext('2d');
+function drawBoxesOnCanvas(imgEl,canvasEl,boxes,origW,origH){
+  const{dispW,dispH,dpr,sx,sy}=computeLayout(imgEl);
+  canvasEl.style.width=dispW+'px';canvasEl.style.height=dispH+'px';
+  canvasEl.width=Math.max(1,Math.round(dispW*dpr));
+  canvasEl.height=Math.max(1,Math.round(dispH*dpr));
+  const ctx=canvasEl.getContext('2d');
   ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
-
-  const drawOne = (b, highlight=false)=>{
-    const x  = Math.round(b.x1 * sx) * dpr;
-    const y  = Math.round(b.y1 * sy) * dpr;
-    const w  = Math.round((b.x2 - b.x1) * sx) * dpr;
-    const h  = Math.round((b.y2 - b.y1) * sy) * dpr;
-
-    ctx.lineWidth = (highlight? 3:2) * dpr;
-    ctx.strokeStyle = highlight ? '#00e676' : '#ff3b30';
+  const drawOne=(b,hl=false)=>{
+    const x=Math.round(b.x1*sx)*dpr,y=Math.round(b.y1*sy)*dpr;
+    const w=Math.round((b.x2-b.x1)*sx)*dpr,h=Math.round((b.y2-b.y1)*sy)*dpr;
+    ctx.lineWidth=(hl?3:2)*dpr;ctx.strokeStyle=hl?'#00e676':'#3b82f6';
     ctx.strokeRect(x,y,w,h);
-
-    // 라벨
-    const label = `${b.cls ?? ''} ${(b.conf ?? 0).toFixed(2)} (${Math.round(x)},${Math.round(y)}) (${Math.round(x+w)},${Math.round(y+h)})`;
-    ctx.font = `${12*dpr}px system-ui, -apple-system, Segoe UI, Roboto`;
-    const tw = ctx.measureText(label).width + 6*dpr;
-    const th = 16*dpr;
-    const tx = x; const ty = Math.max(0, y - th - 2*dpr);
-    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(tx, ty, tw, th);
-    ctx.fillStyle = '#fff'; ctx.fillText(label, tx + 3*dpr, ty + th - 4*dpr);
-
-    // 편집 모드면 핸들 표시(8개: 모서리4 + 변중앙4)
+    const label=`${class_name[b.cls]||b.cls} ${(b.conf??0).toFixed(2)}`;
+    ctx.font=`${11*dpr}px Inter,system-ui`;
+    const tw=ctx.measureText(label).width+6*dpr,th=15*dpr;
+    ctx.fillStyle='rgba(59,130,246,0.75)';ctx.fillRect(x,Math.max(0,y-th-2*dpr),tw,th);
+    ctx.fillStyle='#fff';ctx.fillText(label,x+3*dpr,Math.max(th,y-3*dpr));
     if(editMode){
-
-
-      const handleSize = 7 * dpr;
-      const centers = [
-        [x,y,'nw'], [x+w,y,'ne'], [x,y+h,'sw'], [x+w,y+h,'se'],
-        [x+w/2,y,'n'], [x+w/2,y+h,'s'], [x,y+h/2,'w'], [x+w,y+h/2,'e']
-      ];
-      ctx.fillStyle = highlight ? '#00e676' : '#ff3b30';
-
-      centers.forEach(([cx,cy,key])=>{
-        ctx.fillRect(cx-handleSize/2, cy-handleSize/2, handleSize, handleSize);
-      });
+      const hs=7*dpr;
+      [[x,y],[x+w,y],[x,y+h],[x+w,y+h],[x+w/2,y],[x+w/2,y+h],[x,y+h/2],[x+w,y+h/2]]
+        .forEach(([cx,cy])=>{ctx.fillStyle=hl?'#00e676':'#3b82f6';ctx.fillRect(cx-hs/2,cy-hs/2,hs,hs);});
     }
   };
-
-  // 선택 박스를 맨 위로
-  const sorted = [...boxes].sort((a,b)=> (a.id===selectedId)-(b.id===selectedId));
-  sorted.forEach(b=> drawOne(b, b.id===selectedId));
-  highlightSelectedRowId(selectedId)
+  [...boxes].sort((a,b)=>(a.id===selectedId)-(b.id===selectedId)).forEach(b=>drawOne(b,b.id===selectedId));
 }
 
-// === 히트테스트 ===
-function hitTest(mx, my){
-  if(!editMode) return null;
-  const {dpr, sx, sy} = computeLayout(viewerImg);
-  // 상단에 보이는 상자를 우선(마지막 그린 = 선택된 것)
-  const boxes = [...currentBoxes].sort((a,b)=> (a.id===selectedId)-(b.id===selectedId));
+/* ── 히트테스트 ── */
+function hitTest(mx,my){
+  if(!editMode)return null;
+  const{sx,sy}=computeLayout(viewerImg);
+  const boxes=[...currentBoxes].sort((a,b)=>(a.id===selectedId)-(b.id===selectedId));
   for(let i=boxes.length-1;i>=0;--i){
-    const b = boxes[i];
-    const x  = b.x1 * sx, y = b.y1 * sy;
-    const w  = (b.x2-b.x1) * sx, h = (b.y2-b.y1) * sy;
-    const r = overlay.getBoundingClientRect();
-    const px = mx - r.left, py = my - r.top;
-
-    // 핸들 크기
-    const hs = 7; // CSS px(화면 단위)
-    const handles = [
-      {k:'nw', x:x, y:y},
-      {k:'ne', x:x+w, y:y},
-      {k:'sw', x:x, y:y+h},
-      {k:'se', x:x+w, y:y+h},
-      {k:'n',  x:x+w/2, y:y},
-      {k:'s',  x:x+w/2, y:y+h},
-      {k:'w',  x:x, y:y+h/2},
-      {k:'e',  x:x+w, y:y+h/2}
-    ];
-    for(const hdl of handles){
-      if(Math.abs(px - hdl.x) <= hs && Math.abs(py - hdl.y) <= hs){
-        return {type:'handle', id:b.id, handle: hdl.k};
-      }
-    }
-    // 박스 내부
-    if(px>=x && py>=y && px<=x+w && py<=y+h){
-      return {type:'box', id:b.id};
-    }
+    const b=boxes[i];
+    const x=b.x1*sx,y=b.y1*sy,w=(b.x2-b.x1)*sx,h=(b.y2-b.y1)*sy;
+    const r=overlay.getBoundingClientRect(),px=mx-r.left,py=my-r.top,hs=7;
+    const hdls=[{k:'nw',x,y},{k:'ne',x:x+w,y},{k:'sw',x,y:y+h},{k:'se',x:x+w,y:y+h},{k:'n',x:x+w/2,y},{k:'s',x:x+w/2,y:y+h},{k:'w',x,y:y+h/2},{k:'e',x:x+w,y:y+h/2}];
+    for(const h2 of hdls){if(Math.abs(px-h2.x)<=hs&&Math.abs(py-h2.y)<=hs)return{type:'handle',id:b.id,handle:h2.k};}
+    if(px>=x&&py>=y&&px<=x+w&&py<=y+h)return{type:'box',id:b.id};
   }
   return null;
 }
 
-// === 마우스 이벤트 ===
-overlay.addEventListener('mousedown', (e)=>{
-  if(!editMode) return;
-  const hit = hitTest(e.clientX, e.clientY);
-  if(!hit){
-    selectedId = null;
-    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
-    saveBoxBtn.disabled = true;
-    return;
-  }
-  selectedId = hit.id;
-  const sel = currentBoxes.find(b=> String(b.id)===String(selectedId));
-  const {ix, iy} = screenToImage(e.clientX, e.clientY);
-
-  if(hit.type==='handle'){
-    dragging = {
-      mode:'resize',
-      handle: hit.handle,
-      start:{mx:e.clientX, my:e.clientY, ix, iy},
-      startBox: {...sel}
-    };
-  }else{
-    dragging = {
-      mode:'move',
-      start:{mx:e.clientX, my:e.clientY, ix, iy},
-      startBox: {...sel}
-    };
-  }
-  saveBoxBtn.disabled = false;
-  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+/* ── 마우스 이벤트 ── */
+overlay.addEventListener('mousedown',e=>{
+  if(!editMode)return;
+  const hit=hitTest(e.clientX,e.clientY);
+  if(!hit){selectedId=null;saveBoxBtn.disabled=true;draw();return;}
+  selectedId=hit.id;
+  const sel=currentBoxes.find(b=>String(b.id)===String(selectedId));
+  const{ix,iy}=screenToImage(e.clientX,e.clientY);
+  dragging=hit.type==='handle'?{mode:'resize',handle:hit.handle,start:{ix,iy},startBox:{...sel}}:{mode:'move',start:{ix,iy},startBox:{...sel}};
+  saveBoxBtn.disabled=false;draw();
 });
-
-window.addEventListener('mousemove', (e)=>{
-  if(!editMode || !dragging || selectedId==null) return;
-  const sel = currentBoxes.find(b=> String(b.id)===String(selectedId));
-  if(!sel) return;
-
-  const {ix, iy} = screenToImage(e.clientX, e.clientY);
-  const minSize = 4; // px in image coords
-  const W = currentOrigSize.w, H = currentOrigSize.h;
-
+window.addEventListener('mousemove',e=>{
+  if(!editMode||!dragging||selectedId==null)return;
+  const sel=currentBoxes.find(b=>String(b.id)===String(selectedId));if(!sel)return;
+  const{ix,iy}=screenToImage(e.clientX,e.clientY);
+  const W=currentOrigSize.w,H=currentOrigSize.h;
   if(dragging.mode==='move'){
-    const dx = ix - dragging.start.ix;
-    const dy = iy - dragging.start.iy;
-    let nx1 = dragging.startBox.x1 + dx;
-    let ny1 = dragging.startBox.y1 + dy;
-    let nx2 = dragging.startBox.x2 + dx;
-    let ny2 = dragging.startBox.y2 + dy;
-    // 경계 클램프
-    const bw = nx2-nx1, bh = ny2-ny1;
-    nx1 = clamp(nx1, 0, W-bw); ny1 = clamp(ny1, 0, H-bh);
-    nx2 = nx1 + bw;           ny2 = ny1 + bh;
-    Object.assign(sel, {x1:toInt(nx1), y1:toInt(ny1), x2:toInt(nx2), y2:toInt(ny2)});
-  }else{ // resize
-    let {x1,y1,x2,y2} = dragging.startBox;
-    let tx = ix, ty = iy;
-    switch(dragging.handle){
-      case 'nw': x1=tx; y1=ty; break;
-      case 'ne': x2=tx; y1=ty; break;
-      case 'sw': x1=tx; y2=ty; break;
-      case 'se': x2=tx; y2=ty; break;
-      case 'n' : y1=ty; break;
-      case 's' : y2=ty; break;
-      case 'w' : x1=tx; break;
-      case 'e' : x2=tx; break;
-    }
-    // 정렬/클램프/최소크기
-    x1 = clamp(Math.min(x1,x2), 0, W-1);
-    y1 = clamp(Math.min(y1,y2), 0, H-1);
-    x2 = clamp(Math.max(x1+minSize, Math.max(x1,x2)), 1, W);
-    y2 = clamp(Math.max(y1+minSize, Math.max(y1,y2)), 1, H);
-    Object.assign(sel, {x1:toInt(x1), y1:toInt(y1), x2:toInt(x2), y2:toInt(y2)});
+    const dx=ix-dragging.start.ix,dy=iy-dragging.start.iy;
+    const bw=dragging.startBox.x2-dragging.startBox.x1,bh=dragging.startBox.y2-dragging.startBox.y1;
+    let nx1=clamp(dragging.startBox.x1+dx,0,W-bw),ny1=clamp(dragging.startBox.y1+dy,0,H-bh);
+    Object.assign(sel,{x1:toInt(nx1),y1:toInt(ny1),x2:toInt(nx1+bw),y2:toInt(ny1+bh)});
+  }else{
+    let{x1,y1,x2,y2}=dragging.startBox;
+    switch(dragging.handle){case'nw':x1=ix;y1=iy;break;case'ne':x2=ix;y1=iy;break;case'sw':x1=ix;y2=iy;break;case'se':x2=ix;y2=iy;break;case'n':y1=iy;break;case's':y2=iy;break;case'w':x1=ix;break;case'e':x2=ix;break;}
+    x1=clamp(Math.min(x1,x2),0,W-1);y1=clamp(Math.min(y1,y2),0,H-1);
+    x2=clamp(Math.max(x1+4,Math.max(x1+(dragging.startBox.x2-dragging.startBox.x1),x2)),1,W);
+    y2=clamp(Math.max(y1+4,Math.max(y1+(dragging.startBox.y2-dragging.startBox.y1),y2)),1,H);
+    Object.assign(sel,{x1:toInt(x1),y1:toInt(y1),x2:toInt(x2),y2:toInt(y2)});
   }
-  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+  draw();
 });
-
-window.addEventListener('mouseup', ()=>{
-  if(!editMode) return;
-  dragging = null;
-});
-
-// 키보드: ESC 선택 해제, Delete 삭제(선택)
-window.addEventListener('keydown', (e)=>{
-  if(!editMode) return;
-  if(e.key==='Escape'){
-    selectedId = null; dragging = null;
-    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
-    saveBoxBtn.disabled = true;
-  }
-  if(e.key==='Delete' && selectedId!=null){
-    const idx = currentBoxes.findIndex(b=> String(b.id)===String(selectedId));
-    if(idx>=0){
-      // 화면에서만 제거(서버 삭제는 별도 API 필요)
-      currentBoxes.splice(idx,1);
-      selectedId = null; dragging=null;
-      drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
-      saveBoxBtn.disabled = true;
-    }
+window.addEventListener('mouseup',()=>{dragging=null;});
+window.addEventListener('keydown',e=>{
+  if(!editMode)return;
+  if(e.key==='Escape'){selectedId=null;saveBoxBtn.disabled=true;draw();}
+  if(e.key==='Delete'&&selectedId!=null){
+    const idx=currentBoxes.findIndex(b=>String(b.id)===String(selectedId));
+    if(idx>=0){currentBoxes.splice(idx,1);selectedId=null;saveBoxBtn.disabled=true;draw();}
   }
 });
 
-// 편집 토글
-editToggle.addEventListener('change', ()=>{
-  editMode = editToggle.checked;
-  editHint.style.display = editMode ? '' : 'none';
-  overlay.style.pointerEvents = editMode ? 'auto' : 'none';
-  drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
+saveBoxBtn.addEventListener('click',async()=>{
+  if(selectedId==null)return;
+  const b=currentBoxes.find(v=>String(v.id)===String(selectedId));if(!b)return;
+  const url=b.id===''?'/api/box/insert':`/api/box/${b.id}`;
+  const payload=b.id===''?{frame_id:selectedFrameId,conf:0.0,cls:b.cls,x1:b.x1,y1:b.y1,x2:b.x2,y2:b.y2}:{x1:b.x1,y1:b.y1,x2:b.x2,y2:b.y2};
+  const r=await fetch(url,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r.ok){alert('저장 실패: '+await r.text());return;}
+  saveBoxBtn.textContent='✓ 저장됨';selectFrame(selectedFrameId);
+  setTimeout(()=>saveBoxBtn.textContent='💾 저장',900);
 });
 
-// 선택 박스 저장(PATCH)
-saveBoxBtn.addEventListener('click', async ()=>{
-  if(selectedId==null) return;
-  const b = currentBoxes.find(v=> String(v.id)===String(selectedId));
-  if(!b) return;
-  var res ;
-  //alert(JSON.stringify(b))
-  try{
-    if(b.id == '')
-    {
-      res = await fetch(`/api/box/insert`, {
-        method:'PATCH',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({frame_id : selectedFrameId, conf : 0.0, cls : b.cls, x1:b.x1, y1:b.y1, x2:b.x2, y2:b.y2 })
-      });
-    }
-    else
-      res = await fetch(`/api/box/${b.id}`, {
-        method:'PATCH',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ x1:b.x1, y1:b.y1, x2:b.x2, y2:b.y2 })
-      });
-    if(!res.ok){
-      alert('저장 실패: '+ await res.text());
-      return;
-    }
-    saveBoxBtn.textContent = '저장됨';
-    //alert('저장됨..............')
-    selectFrame(selectedFrameId)
-    //alert('프레임 재 로드.............')
-    setTimeout(()=> saveBoxBtn.textContent='선택 박스 저장', 900);
-  }catch(err){
-    console.error(err);
-    alert('저장 에러: '+ err);
-  }
-});
+window.addEventListener('resize',()=>{if(currentBoxes.length&&currentOrigSize.w>0)draw();});
 
-// 창 크기 변경 시 다시 그림(반응형)
-window.addEventListener('resize', ()=>{
-  if(currentBoxes.length && currentOrigSize.w>0){
-    drawBoxesOnCanvas(viewerImg, overlay, currentBoxes, currentOrigSize.w, currentOrigSize.h);
-  }
-});
-
-
-
-init()
+getJobList(0);
 </script>
 </body>
 </html>

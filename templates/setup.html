@@ -1,70 +1,245 @@
 <!doctype html>
 <html lang="ko">
+
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>학습 파이프라인 설정</title>
-<style>
-  :root{
-    --bg:#0b1220; --card:#111a2b; --muted:#8aa0c9; --text:#e7edff;
-    --accent:#4f7cff; --accent-2:#22c55e; --red:#ef4444; --line:#1f2a44;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; padding:24px; font-family:system-ui,Segoe UI,Roboto,Apple SD Gothic Neo,Arial,sans-serif;
-    background:var(--bg); color:var(--text);
-  }
-  h1{font-size:22px; margin:0 0 14px}
-  h2{font-size:18px; margin:22px 0 10px}
-  p.muted{color:var(--muted); margin:8px 0 18px}
-  .grid{display:grid; gap:16px}
-  @media(min-width:1000px){ .grid{grid-template-columns: 1.2fr 1fr} }
-  .card{
-    background:var(--card); border:1px solid var(--line);
-    border-radius:14px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.25);
-  }
-  .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
-  .row-3{display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px}
-  label{display:block; font-size:13px; color:var(--muted); margin:2px 0 6px}
-  span {display:inline;}
-  input[type="text"], input[type="url"], input[type="number"], textarea, select{
-    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
-    background:#0f172a; color:var(--text); outline:none;
-  }
-  input[type="file"]{ color:var(--muted)}
-  .hint{font-size:12px; color:var(--muted); margin-top:4px}
-  .btn{
-    appearance:none; border:1px solid var(--line); background:#0f172a; color:var(--text);
-    padding:10px 14px; border-radius:10px; cursor:pointer;
-  }
-  .btn.primary{background:var(--accent); border-color:#3b67f0}
-  .btn.good{background:var(--accent-2); border-color:#16a34a}
-  .btn.danger{background:var(--red); border-color:#dc2626}
-  .btn.ghost{background:transparent}
-  .btn + .btn{margin-left:8px}
-  .toolbar{display:flex; gap:8px; flex-wrap:wrap}
-  .flex{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
-  .preview{
-    border:1px dashed var(--line); border-radius:12px; padding:10px; min-height:140px;
-    display:flex; align-items:center; justify-content:center; color:var(--muted);
-    background:#0c1324;
-  }
-  .preview img{max-width:100%; max-height:260px; border-radius:10px}
-  .code{background:#0a0f1e; border:1px solid var(--line); border-radius:12px; padding:12px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; overflow:auto; max-height:max-content}
-  .section-title{display:flex; align-items:center; gap:8px; margin:8px 0 6px}
-  .badge{font-size:11px; color:#dbeafe; background:#1e3a8a; border:1px solid #1d4ed8; padding:2px 8px; border-radius:999px}
-  .switch{display:inline-flex; align-items:center; gap:8px}
-  .switch input{transform:scale(1.1)}
-  .kv{font-size:12px; color:var(--muted)}
-  .divider{height:1px; background:var(--line); margin:14px 0}
-  .ok{color:var(--accent-2)} .err{color:var(--red)}
-  .inline-inputs {
-    display: flex;
-    gap: 8px;                       /* 두 인풋 사이 간격 */
-    align-items: center;
-  }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>학습 파이프라인 설정</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #111a2b;
+      --muted: #8aa0c9;
+      --text: #e7edff;
+      --accent: #4f7cff;
+      --accent-2: #22c55e;
+      --red: #ef4444;
+      --line: #1f2a44;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, Segoe UI, Roboto, Apple SD Gothic Neo, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    h1 {
+      font-size: 22px;
+      margin: 0 0 14px
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 22px 0 10px
+    }
+
+    p.muted {
+      color: var(--muted);
+      margin: 8px 0 18px
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px
+    }
+
+    @media(min-width:1000px) {
+      .grid {
+        grid-template-columns: 1.2fr 1fr
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin: 2px 0 6px
+    }
+
+    span {
+      display: inline;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0f172a;
+      color: var(--text);
+      outline: none;
+    }
+
+    input[type="file"] {
+      color: var(--muted)
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #0f172a;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      border-color: #3b67f0
+    }
+
+    .btn.good {
+      background: var(--accent-2);
+      border-color: #16a34a
+    }
+
+    .btn.danger {
+      background: var(--red);
+      border-color: #dc2626
+    }
+
+    .btn.ghost {
+      background: transparent
+    }
+
+    .btn+.btn {
+      margin-left: 8px
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap
+    }
+
+    .flex {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .preview {
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      min-height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      background: #0c1324;
+    }
+
+    .preview img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 10px
+    }
+
+    .code {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      overflow: auto;
+      max-height: max-content
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0 6px
+    }
+
+    .badge {
+      font-size: 11px;
+      color: #dbeafe;
+      background: #1e3a8a;
+      border: 1px solid #1d4ed8;
+      padding: 2px 8px;
+      border-radius: 999px
+    }
+
+    .switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    .switch input {
+      transform: scale(1.1)
+    }
+
+    .kv {
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 14px 0
+    }
+
+    .ok {
+      color: var(--accent-2)
+    }
+
+    .err {
+      color: var(--red)
+    }
+
+    .inline-inputs {
+      display: flex;
+      gap: 8px;
+      /* 두 인풋 사이 간격 */
+      align-items: center;
+    }
+  </style>
 </head>
+
 <body>
   <h1>학습 파이프라인 설정</h1>
   <p class="muted">데이터 수집 경로·이미지/라벨·웹 저장소·미리보기·모델/학습·엣지 다운로드 경로를 한 번에 구성하고 JSON으로 저장/불러오기 합니다.</p>
@@ -83,7 +258,8 @@
         <div>
           <label>사용자아이디/패스워드</label>
           <span class="inline-inputs">
-          <input type="text" id="database.user_id" placeholder="postgres" /><input type="text" id="data.passwd" placeholder="1234" />
+            <input type="text" id="database.user_id" placeholder="postgres" /><input type="text" id="data.passwd"
+              placeholder="1234" />
           </span>
         </div>
       </div>
@@ -96,7 +272,7 @@
         <div>
           <label>Port</label>
           <span class="inline-inputs">
-          <input type="text" id="database.port" placeholder="postgres" />
+            <input type="text" id="database.port" placeholder="postgres" />
           </span>
         </div>
       </div>
@@ -170,10 +346,11 @@
         </div>
         <div>
           <label>학습 프로그램 엔트리(명령)</label>
-          <input type="text" id="train.entry" placeholder="python train.py --data=/data/train --weights=/models/yolov8n.pt" />
+          <input type="text" id="train.entry"
+            placeholder="python train.py --data=/data/train --weights=/models/yolov8n.pt" />
         </div>
       </div>
-      <div >
+      <div>
         <div>
           <label>테스트모델 위치</label>
           <input type="text" id="train.test_model" placeholder="/opt/train" />
@@ -246,266 +423,267 @@
     </div>
   </div>
 
-<script>
-  // --------- Model ----------
-  const defaultConfig = {
-    database:{
-      dbname : "postgres",          // ✅ DB 이름
-      user_id : "postgres",
-      password : "1234",
-      host : "192.168.0.231",
-      port : "5432",
-    },
-    data:{
-      collect_root:"/data/ingest",
-      train_root:"/data/train",
-      image_dir:"/data/train/images",
-      label_dir:"/data/train/labels",
-      web_root:"/var/www/dataset-preview",
-    },
-    preview:{ sample_path:"" },
-    train:{
-      model_path:"/models/yolov8n.pt",
-      exec_workdir:"/opt/train",
-      dataset_arg:"/data/train",
-      entry:"python train.py --data=/data/train --weights=/models/yolov8n.pt",
-      epochs:100,
-      batch:16,
-      test_model : "D:/project/umssumss/yolo8/dataset/foodbin/runs/goat_default_train7/weights/best.pt"
-    },
-    edge:{
-      enable:false,
-      download_dir:"/var/edge/models",
-      package_name:"model_bundle.tgz",
-      protocol:"http"
-    }
-  };
+  <script>
+    // --------- Model ----------
+    const defaultConfig = {
+      database: {
+        dbname: "postgres",          // ✅ DB 이름
+        user_id: "postgres",
+        password: "1234",
+        host: "192.168.0.231",
+        port: "5432",
+      },
+      data: {
+        collect_root: "/data/ingest",
+        train_root: "/data/train",
+        image_dir: "/data/train/images",
+        label_dir: "/data/train/labels",
+        web_root: "/var/www/dataset-preview",
+      },
+      preview: { sample_path: "" },
+      train: {
+        model_path: "/models/yolov8n.pt",
+        exec_workdir: "/opt/train",
+        dataset_arg: "/data/train",
+        entry: "python train.py --data=/data/train --weights=/models/yolov8n.pt",
+        epochs: 100,
+        batch: 16,
+        test_model: "D:/project/umssumss/yolo8/dataset/foodbin/runs/goat_default_train7/weights/best.pt"
+      },
+      edge: {
+        enable: false,
+        download_dir: "/var/edge/models",
+        package_name: "model_bundle.tgz",
+        protocol: "http"
+      }
+    };
 
-  const form = document.getElementById('cfgForm');
-  const jsonBox = document.getElementById('jsonBox');
-  const vbox = document.getElementById('validateBox');
-  const msg = document.getElementById('msg');
+    const form = document.getElementById('cfgForm');
+    const jsonBox = document.getElementById('jsonBox');
+    const vbox = document.getElementById('validateBox');
+    const msg = document.getElementById('msg');
 
-  const id = s => document.getElementById(s);
-  const fields = [
-    "data.collect_root","data.train_root","data.image_dir","data.label_dir","data.web_root",
-    "preview.sample_path",
-    "train.model_path","train.exec_workdir","train.dataset_arg","train.entry","train.epochs","train.batch",
-    "edge.enable","edge.download_dir","edge.package_name","edge.protocol"
-  ];
-
-  // --------- Helpers ----------
-  function getConfigFromForm(){
-    const cfg = structuredClone(defaultConfig);
-    cfg.data.collect_root = id("data.collect_root").value.trim();
-    cfg.data.train_root = id("data.train_root").value.trim();
-    cfg.data.image_dir = id("data.image_dir").value.trim();
-    cfg.data.label_dir = id("data.label_dir").value.trim();
-    cfg.data.web_root = id("data.web_root").value.trim();
-
-    cfg.preview.sample_path = id("preview.sample_path").value.trim();
-
-    cfg.train.model_path = id("train.model_path").value.trim();
-    cfg.train.test_model = id("train.test_model").value.trim();
-    cfg.train.exec_workdir = id("train.exec_workdir").value.trim();
-    cfg.train.dataset_arg = id("train.dataset_arg").value.trim();
-    cfg.train.entry = id("train.entry").value.trim();
-    cfg.train.epochs = parseInt(id("train.epochs").value || 0, 10);
-    cfg.train.batch = parseInt(id("train.batch").value || 0, 10);
-
-    cfg.edge.enable = id("edge.enable").checked;
-    cfg.edge.download_dir = id("edge.download_dir").value.trim();
-    cfg.edge.package_name = id("edge.package_name").value.trim();
-    cfg.edge.protocol = id("edge.protocol").value;
-
-    return cfg;
-  }
-
-  function setFormFromConfig(cfg){
-    id("data.collect_root").value = cfg.data.collect_root ?? "";
-    id("data.train_root").value   = cfg.data.train_root ?? "";
-    id("data.image_dir").value    = cfg.data.image_dir ?? "";
-    id("data.label_dir").value    = cfg.data.label_dir ?? "";
-    id("data.web_root").value     = cfg.data.web_root ?? "";
-
-    id("preview.sample_path").value = cfg.preview.sample_path ?? "";
-
-    id("train.model_path").value   = cfg.train.model_path ?? "";
-    id("train.test_model").value   = cfg.train.test_model ?? "";
-    id("train.exec_workdir").value = cfg.train.exec_workdir ?? "";
-    id("train.dataset_arg").value  = cfg.train.dataset_arg ?? "";
-    id("train.entry").value        = cfg.train.entry ?? "";
-    id("train.epochs").value       = cfg.train.epochs ?? 0;
-    id("train.batch").value        = cfg.train.batch ?? 0;
-
-    id("edge.enable").checked      = !!cfg.edge.enable;
-    id("edge.download_dir").value  = cfg.edge.download_dir ?? "";
-    id("edge.package_name").value  = cfg.edge.package_name ?? "";
-    id("edge.protocol").value      = cfg.edge.protocol ?? "http";
-  }
-
-  function renderJSON(){
-    const cfg = getConfigFromForm();
-    jsonBox.textContent = JSON.stringify(cfg, null, 2);
-    validate(cfg);
-  }
-
-  function validate(cfg){
-    const errs = [];
-    const req = [
-      ["data.collect_root","데이터 수집 경로"],
-      ["data.train_root","학습데이터 경로"],
-      ["data.image_dir","이미지 경로"],
-      ["data.label_dir","라벨링 데이터 경로"],
-      ["train.model_path","모델 경로"],
-      ["train.exec_workdir","학습 스크립트 실행 위치"],
-      ["train.entry","학습 프로그램 엔트리"]
+    const id = s => document.getElementById(s);
+    const fields = [
+      "data.collect_root", "data.train_root", "data.image_dir", "data.label_dir", "data.web_root",
+      "preview.sample_path",
+      "train.model_path", "train.exec_workdir", "train.dataset_arg", "train.entry", "train.epochs", "train.batch",
+      "edge.enable", "edge.download_dir", "edge.package_name", "edge.protocol"
     ];
-    req.forEach(([path,label])=>{
-      const v = path.split('.').reduce((o,k)=>o?.[k], cfg);
-      if(!v) errs.push(`필수: ${label}`);
-    });
-    if(cfg.train.epochs<=0) errs.push("에폭은 1 이상이어야 합니다");
-    if(cfg.train.batch<=0) errs.push("배치 사이즈는 1 이상이어야 합니다");
-    if(cfg.edge.enable){
-      if(!cfg.edge.download_dir) errs.push("엣지 다운로드 위치가 필요합니다");
-      if(!cfg.edge.package_name) errs.push("엣지 패키지 파일명이 필요합니다");
+
+    // --------- Helpers ----------
+    function getConfigFromForm() {
+      const cfg = structuredClone(defaultConfig);
+      cfg.data.collect_root = id("data.collect_root").value.trim();
+      cfg.data.train_root = id("data.train_root").value.trim();
+      cfg.data.image_dir = id("data.image_dir").value.trim();
+      cfg.data.label_dir = id("data.label_dir").value.trim();
+      cfg.data.web_root = id("data.web_root").value.trim();
+
+      cfg.preview.sample_path = id("preview.sample_path").value.trim();
+
+      cfg.train.model_path = id("train.model_path").value.trim();
+      cfg.train.test_model = id("train.test_model").value.trim();
+      cfg.train.exec_workdir = id("train.exec_workdir").value.trim();
+      cfg.train.dataset_arg = id("train.dataset_arg").value.trim();
+      cfg.train.entry = id("train.entry").value.trim();
+      cfg.train.epochs = parseInt(id("train.epochs").value || 0, 10);
+      cfg.train.batch = parseInt(id("train.batch").value || 0, 10);
+
+      cfg.edge.enable = id("edge.enable").checked;
+      cfg.edge.download_dir = id("edge.download_dir").value.trim();
+      cfg.edge.package_name = id("edge.package_name").value.trim();
+      cfg.edge.protocol = id("edge.protocol").value;
+
+      return cfg;
     }
 
-    vbox.innerHTML = "";
-    if(errs.length===0){
-      const li = document.createElement('li'); li.innerHTML = `<span class="ok">모든 항목이 유효합니다.</span>`;
-      vbox.appendChild(li);
-    }else{
-      errs.forEach(e=>{
-        const li = document.createElement('li'); li.innerHTML = `<span class="err">• ${e}</span>`;
-        vbox.appendChild(li);
+    function setFormFromConfig(cfg) {
+      id("data.collect_root").value = cfg.data.collect_root ?? "";
+      id("data.train_root").value = cfg.data.train_root ?? "";
+      id("data.image_dir").value = cfg.data.image_dir ?? "";
+      id("data.label_dir").value = cfg.data.label_dir ?? "";
+      id("data.web_root").value = cfg.data.web_root ?? "";
+
+      id("preview.sample_path").value = cfg.preview.sample_path ?? "";
+
+      id("train.model_path").value = cfg.train.model_path ?? "";
+      id("train.test_model").value = cfg.train.test_model ?? "";
+      id("train.exec_workdir").value = cfg.train.exec_workdir ?? "";
+      id("train.dataset_arg").value = cfg.train.dataset_arg ?? "";
+      id("train.entry").value = cfg.train.entry ?? "";
+      id("train.epochs").value = cfg.train.epochs ?? 0;
+      id("train.batch").value = cfg.train.batch ?? 0;
+
+      id("edge.enable").checked = !!cfg.edge.enable;
+      id("edge.download_dir").value = cfg.edge.download_dir ?? "";
+      id("edge.package_name").value = cfg.edge.package_name ?? "";
+      id("edge.protocol").value = cfg.edge.protocol ?? "http";
+    }
+
+    function renderJSON() {
+      const cfg = getConfigFromForm();
+      jsonBox.textContent = JSON.stringify(cfg, null, 2);
+      validate(cfg);
+    }
+
+    function validate(cfg) {
+      const errs = [];
+      const req = [
+        ["data.collect_root", "데이터 수집 경로"],
+        ["data.train_root", "학습데이터 경로"],
+        ["data.image_dir", "이미지 경로"],
+        ["data.label_dir", "라벨링 데이터 경로"],
+        ["train.model_path", "모델 경로"],
+        ["train.exec_workdir", "학습 스크립트 실행 위치"],
+        ["train.entry", "학습 프로그램 엔트리"]
+      ];
+      req.forEach(([path, label]) => {
+        const v = path.split('.').reduce((o, k) => o?.[k], cfg);
+        if (!v) errs.push(`필수: ${label}`);
       });
+      if (cfg.train.epochs <= 0) errs.push("에폭은 1 이상이어야 합니다");
+      if (cfg.train.batch <= 0) errs.push("배치 사이즈는 1 이상이어야 합니다");
+      if (cfg.edge.enable) {
+        if (!cfg.edge.download_dir) errs.push("엣지 다운로드 위치가 필요합니다");
+        if (!cfg.edge.package_name) errs.push("엣지 패키지 파일명이 필요합니다");
+      }
+
+      vbox.innerHTML = "";
+      if (errs.length === 0) {
+        const li = document.createElement('li'); li.innerHTML = `<span class="ok">모든 항목이 유효합니다.</span>`;
+        vbox.appendChild(li);
+      } else {
+        errs.forEach(e => {
+          const li = document.createElement('li'); li.innerHTML = `<span class="err">• ${e}</span>`;
+          vbox.appendChild(li);
+        });
+      }
     }
-  }
 
-  function flash(text, good=false){
-    msg.textContent = text;
-    msg.style.color = good ? "var(--accent-2)" : "var(--muted)";
-    setTimeout(()=>{ msg.textContent=""; }, 2000);
-  }
+    function flash(text, good = false) {
+      msg.textContent = text;
+      msg.style.color = good ? "var(--accent-2)" : "var(--muted)";
+      setTimeout(() => { msg.textContent = ""; }, 2000);
+    }
 
-  // --------- Image Preview ----------
-  const fileInput = document.getElementById('preview.file');
-  const previewBox = document.getElementById('previewBox');
+    // --------- Image Preview ----------
+    const fileInput = document.getElementById('preview.file');
+    const previewBox = document.getElementById('previewBox');
 
-  function showPreviewFromFile(file){
-    const url = URL.createObjectURL(file);
-    previewBox.innerHTML = `<img src="${url}" alt="preview">`;
-  }
-  function showPreviewFromPath(path){
-    if(!path){ previewBox.textContent = "미리보기 이미지가 여기에 표시됩니다"; return; }
-    previewBox.innerHTML = `<img src="${path}" alt="preview" onerror="this.parentElement.textContent='경로 접근 실패 또는 CORS';" />`;
-  }
+    function showPreviewFromFile(file) {
+      const url = URL.createObjectURL(file);
+      previewBox.innerHTML = `<img src="${url}" alt="preview">`;
+    }
+    function showPreviewFromPath(path) {
+      if (!path) { previewBox.textContent = "미리보기 이미지가 여기에 표시됩니다"; return; }
+      previewBox.innerHTML = `<img src="${path}" alt="preview" onerror="this.parentElement.textContent='경로 접근 실패 또는 CORS';" />`;
+    }
 
-  fileInput.addEventListener('change', (e)=>{
-    const f = e.target.files?.[0];
-    if(f) showPreviewFromFile(f);
-  });
-  id("preview.sample_path").addEventListener('input', (e)=>{
-    showPreviewFromPath(e.target.value.trim());
-    renderJSON();
-  });
+    fileInput.addEventListener('change', (e) => {
+      const f = e.target.files?.[0];
+      if (f) showPreviewFromFile(f);
+    });
+    id("preview.sample_path").addEventListener('input', (e) => {
+      showPreviewFromPath(e.target.value.trim());
+      renderJSON();
+    });
 
-  // --------- Wiring (live render) ----------
-  fields.forEach(fid=>{
-    const el = id(fid);
-    const t = el?.type;
-    if(!el) return;
-    el.addEventListener(t==="checkbox" ? "change" : "input", renderJSON);
-  });
+    // --------- Wiring (live render) ----------
+    fields.forEach(fid => {
+      const el = id(fid);
+      const t = el?.type;
+      if (!el) return;
+      el.addEventListener(t === "checkbox" ? "change" : "input", renderJSON);
+    });
 
-  // --------- Buttons ----------
-  id("btnSaveLocal").addEventListener('click', ()=>{
-    const cfg = getConfigFromForm();
-    localStorage.setItem("trainConfig.v1", JSON.stringify(cfg));
-    flash("브라우저 저장 완료", true);
-  });
-  id("btnLoadLocal").addEventListener('click', ()=>{
-    const s = localStorage.getItem("trainConfig.v1");
-    if(!s) return flash("저장된 설정이 없습니다");
-    setFormFromConfig(JSON.parse(s));
-    renderJSON();
-    flash("브라우저에서 불러옴", true);
-  });
-  id("btnReset").addEventListener('click', ()=>{
+    // --------- Buttons ----------
+    id("btnSaveLocal").addEventListener('click', () => {
+      const cfg = getConfigFromForm();
+      localStorage.setItem("trainConfig.v1", JSON.stringify(cfg));
+      flash("브라우저 저장 완료", true);
+    });
+    id("btnLoadLocal").addEventListener('click', () => {
+      const s = localStorage.getItem("trainConfig.v1");
+      if (!s) return flash("저장된 설정이 없습니다");
+      setFormFromConfig(JSON.parse(s));
+      renderJSON();
+      flash("브라우저에서 불러옴", true);
+    });
+    id("btnReset").addEventListener('click', () => {
+      setFormFromConfig(defaultConfig);
+      renderJSON();
+      previewBox.textContent = "미리보기 이미지가 여기에 표시됩니다";
+      fileInput.value = "";
+      flash("초기화 완료", true);
+    });
+    id("btnExport").addEventListener('click', () => {
+      const cfg = getConfigFromForm();
+      const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: "application/json" });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "training_config.json";
+      a.click();
+    });
+    document.getElementById('importFile').addEventListener('change', (e) => {
+      const f = e.target.files?.[0]; if (!f) return;
+      const fr = new FileReader();
+      fr.onload = () => {
+        try {
+          const cfg = JSON.parse(fr.result);
+          setFormFromConfig(cfg);
+          renderJSON();
+          flash("JSON 가져오기 완료", true);
+        } catch (err) { flash("JSON 파싱 실패"); }
+      };
+      fr.readAsText(f, "utf-8");
+    });
+
+    // 서버 전송(엔드포인트는 환경에 맞게 변경)
+    id("btnSend").addEventListener('click', async () => {
+      const cfg = getConfigFromForm();
+      validate(cfg);
+      // 예시: /api/config 로 전송
+      try {
+        const res = await fetch("/api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cfg)
+        });
+        if (!res.ok) {
+          const text = await res.text();
+          return flash("서버 전송 실패: " + text);
+        }
+        flash("서버 전송 성공", true);
+      } catch (e) {
+        flash("서버 전송 에러: " + e.message);
+      }
+    });
+
+    // init
     setFormFromConfig(defaultConfig);
     renderJSON();
-    previewBox.textContent = "미리보기 이미지가 여기에 표시됩니다";
-    fileInput.value = "";
-    flash("초기화 완료", true);
-  });
-  id("btnExport").addEventListener('click', ()=>{
-    const cfg = getConfigFromForm();
-    const blob = new Blob([JSON.stringify(cfg, null, 2)], {type:"application/json"});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = "training_config.json";
-    a.click();
-  });
-  document.getElementById('importFile').addEventListener('change', (e)=>{
-    const f = e.target.files?.[0]; if(!f) return;
-    const fr = new FileReader();
-    fr.onload = ()=>{
-      try{
-        const cfg = JSON.parse(fr.result);
-        setFormFromConfig(cfg);
+
+    async function loadServerConfig() {
+      try {
+        const res = await fetch("/api/get_config");
+        if (!res.ok) throw new Error("서버 응답 오류: " + res.status);
+        const cfg = await res.json();
+        console.log("서버에서 받은 설정:", cfg);
+        setFormFromConfig(cfg);  // 기존 함수 사용
         renderJSON();
-        flash("JSON 가져오기 완료", true);
-      }catch(err){ flash("JSON 파싱 실패"); }
-    };
-    fr.readAsText(f, "utf-8");
-  });
-
-  // 서버 전송(엔드포인트는 환경에 맞게 변경)
-  id("btnSend").addEventListener('click', async ()=>{
-    const cfg = getConfigFromForm();
-    validate(cfg);
-    // 예시: /api/config 로 전송
-    try{
-      const res = await fetch("/api/config", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify(cfg)
-      });
-      if(!res.ok){
-        const text = await res.text();
-        return flash("서버 전송 실패: " + text);
+        flash("서버 설정을 불러왔습니다.", true);
+      } catch (err) {
+        console.warn("설정 불러오기 실패:", err);
+        flash("서버 설정을 불러오지 못했습니다.");
       }
-      flash("서버 전송 성공", true);
-    }catch(e){
-      flash("서버 전송 에러: " + e.message);
     }
-  });
 
-  // init
-  setFormFromConfig(defaultConfig);
-  renderJSON();
-
-  async function loadServerConfig() {
-    try {
-      const res = await fetch("/api/get_config");
-      if (!res.ok) throw new Error("서버 응답 오류: " + res.status);
-      const cfg = await res.json();
-      console.log("서버에서 받은 설정:", cfg);
-      setFormFromConfig(cfg);  // 기존 함수 사용
-      renderJSON();
-      flash("서버 설정을 불러왔습니다.", true);
-    } catch (err) {
-      console.warn("설정 불러오기 실패:", err);
-      flash("서버 설정을 불러오지 못했습니다.");
-    }
-  }
-
-  // 페이지 로드시 자동 실행
-  window.addEventListener("DOMContentLoaded", () => {
-    loadServerConfig();   // ✅ 서버 설정 자동 로드
-  });
-</script>
+    // 페이지 로드시 자동 실행
+    window.addEventListener("DOMContentLoaded", () => {
+      loadServerConfig();   // ✅ 서버 설정 자동 로드
+    });
+  </script>
 </body>
+
 </html>

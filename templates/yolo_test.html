@@ -1,65 +1,249 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>YOLO 이미지 분석</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4단계 - 학습 결과 확인</title>
+  <link rel="stylesheet" href="/static/base.css">
+  <style>
+    body { padding: 24px; }
+
+    .guide-banner {
+      background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(59,130,246,0.06));
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 14px; padding: 18px 22px; margin-bottom: 20px;
+    }
+    .guide-banner h1 { font-size:17px; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+    .step-pill { background:#10b981; color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
+    .guide-sub { font-size:13px; color:#94a3b8; margin:0 0 14px; line-height:1.6; }
+    .guide-steps { display:flex; gap:10px; flex-wrap:wrap; }
+    .guide-step { flex:1; min-width:150px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 13px; }
+    .guide-step-num { font-size:11px; font-weight:700; color:#34d399; margin-bottom:4px; }
+    .guide-step-desc { font-size:11px; color:#64748b; line-height:1.5; }
+
+    .layout { display:grid; grid-template-columns:380px 1fr; gap:20px; align-items:start; }
+
+    /* 업로드 영역 */
+    .drop-zone {
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:36px 24px; text-align:center; cursor:pointer;
+      transition:all 0.2s; position:relative;
+    }
+    .drop-zone.drag, .drop-zone:hover { border-color:var(--accent); background:var(--accent-g); }
+    .drop-zone input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+
+    /* 결과 영역 */
+    .result-img-wrap {
+      border-radius:var(--radius); overflow:hidden;
+      background:var(--card2); min-height:280px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--border);
+    }
+    .result-img-wrap img { max-width:100%; max-height:460px; display:block; }
+
+    .detect-list { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+    .detect-item {
+      display:flex; align-items:center; gap:10px;
+      background:var(--card2); border:1px solid var(--border);
+      border-radius:var(--radius-sm); padding:10px 14px;
+    }
+
+    .model-info {
+      display:flex; align-items:center; gap:8px;
+      padding:10px 14px; background:var(--card2);
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      margin-bottom:16px; font-size:12px;
+    }
+
+    .score-indicator {
+      display:flex; align-items:center; gap:8px; flex:1;
+    }
+    .score-bar { flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden; }
+    .score-fill { height:100%; border-radius:3px; transition:width 0.4s; }
+
+    .tip-box {
+      background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2);
+      border-radius:8px; padding:10px 13px; font-size:11px; color:#64748b; line-height:1.6;
+    }
+    .tip-box strong { color:#34d399; }
+
+    .placeholder-msg { color:var(--muted); font-size:13px; text-align:center; padding:24px; }
+  </style>
 </head>
 <body>
 
-    <h1>YOLO 이미지 업로드 및 분석(JSON API)</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="imageInput" name="file" required>
-        <button type="submit">업로드 및 분석</button>
-    </form>
-    <div>
-        <h3>모델정보 : <div id="test_model"></div></h3>
+<!-- 단계 안내 배너 -->
+<div class="guide-banner">
+  <h1><span class="step-pill">4단계</span> 🔍 학습 결과 확인하기</h1>
+  <p class="guide-sub">
+    학습이 완료된 AI 모델에 새 사진을 넣어보고 얼마나 잘 인식하는지 확인합니다.<br>
+    정확도가 낮다면 1~3단계로 돌아가 <strong style="color:var(--accent);">더 많은 데이터와 정확한 영역 지정</strong>으로 재학습하세요.
+  </p>
+  <div class="guide-steps">
+    <div class="guide-step">
+      <div class="guide-step-num">① 사진 업로드</div>
+      <div class="guide-step-desc">테스트할 사진을 아래 영역에 드래그하거나 클릭해서 선택</div>
     </div>
-    <div id="resultContainer" style="margin-top: 20px;">
-        <h3>결과 이미지:</h3>
-        <img id="resultImage" style="max-width: 400px; display: none;" />
-        <h3>탐지 결과(JSON):</h3>
-        <pre id="resultText"></pre>
+    <div class="guide-step">
+      <div class="guide-step-num">② 분석 시작</div>
+      <div class="guide-step-desc">"분석 시작" 버튼 클릭 → AI가 물체를 찾아 박스로 표시</div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">③ 결과 확인</div>
+      <div class="guide-step-desc">오른쪽에서 인식된 물체와 정확도(%) 확인</div>
+    </div>
+  </div>
+</div>
+
+<!-- 현재 사용 중인 모델 표시 -->
+<div class="model-info">
+  <span style="color:var(--text2);">🤖 현재 사용 중인 AI 모델:</span>
+  <span id="test_model" style="font-family:ui-monospace,monospace; color:var(--accent); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">로딩 중...</span>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: 업로드 -->
+  <div>
+    <div class="card">
+      <h2 style="margin-bottom:12px;">📷 사진 업로드</h2>
+      <form id="uploadForm">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="imageInput" name="file" accept="image/*" required onchange="previewFile(this)">
+          <div style="font-size:36px; margin-bottom:10px;">📸</div>
+          <div style="font-weight:600; font-size:14px;">사진을 여기에 드래그하거나 클릭</div>
+          <div style="font-size:12px; color:var(--muted); margin-top:6px;">JPG, PNG, BMP 지원</div>
+        </div>
+
+        <!-- 미리보기 -->
+        <div id="previewWrap" style="margin-top:12px; display:none;">
+          <img id="previewImg" style="max-width:100%; border-radius:8px; border:1px solid var(--border);">
+          <div id="previewName" style="font-size:11px; color:var(--muted); margin-top:5px; text-align:center;"></div>
+        </div>
+
+        <button class="btn btn-primary" type="submit"
+          style="width:100%; margin-top:14px; justify-content:center; padding:11px;">
+          ▶ 분석 시작
+        </button>
+      </form>
     </div>
 
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+    <div style="margin-top:12px;" class="tip-box">
+      <strong>결果 해석 방법</strong><br>
+      • 정확도 <strong>80% 이상</strong> → 잘 인식하고 있음<br>
+      • 정확도 <strong>50% 미만</strong> → 학습 데이터 보강 필요<br>
+      • 인식 못 함 → 해당 유형 데이터 추가 필요
+    </div>
+  </div>
 
-            const formData = new FormData();
-            const imageFile = document.getElementById('imageInput').files[0];
-            formData.append('file', imageFile);
+  <!-- RIGHT: 결과 -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+      <h2 style="margin:0;">🎯 AI 인식 결과</h2>
+      <span class="badge badge-green" id="detectCount" style="display:none;"></span>
+    </div>
 
-            try {
-                const response = await fetch('/predict_api/', {
-                    method: 'POST',
-                    body: formData
-                });
+    <!-- 결과 이미지 -->
+    <div class="result-img-wrap" id="resultWrap">
+      <div class="placeholder-msg">
+        📷 사진을 업로드하면<br>AI가 인식한 물체가 박스로 표시됩니다
+      </div>
+    </div>
 
-                const data = await response.json();
+    <!-- 인식된 물체 목록 -->
+    <div class="detect-list" id="detectList"></div>
+  </div>
 
-                document.getElementById('resultImage').src = data.image_url;
-                document.getElementById('resultImage').style.display = 'block';
-                document.getElementById('resultText').textContent = JSON.stringify(data.predictions, null, 2);
-            } catch (error) {
-                alert('오류 발생: ' + error.message);
-            }
-        });
+</div>
 
-        loadServerConfig();
-        async function loadServerConfig() {
-            try {
-            const res = await fetch("/api/get_config");
-            if (!res.ok) throw new Error("서버 응답 오류: " + res.status);
-            const cfg = await res.json();
-            console.log("서버에서 받은 설정:", cfg);
+<script>
+  // 현재 모델 정보 로드
+  async function loadServerConfig() {
+    try {
+      const cfg = await (await fetch('/api/get_config')).json();
+      const el = document.getElementById('test_model');
+      el.textContent = cfg.train?.test_model || '(설정되지 않음 - 환경설정에서 지정해 주세요)';
+      el.title = cfg.train?.test_model || '';
+    } catch(e) {
+      document.getElementById('test_model').textContent = '설정을 불러오지 못했습니다.';
+    }
+  }
+  loadServerConfig();
 
-            document.getElementById('test_model').innerHTML  = cfg.train.test_model ?? "";
+  // 파일 미리보기
+  function previewFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('previewImg').src = URL.createObjectURL(file);
+    document.getElementById('previewName').textContent = file.name;
+    document.getElementById('previewWrap').style.display = '';
+  }
 
-            } catch (err) {
-            console.warn("설정 불러오기 실패:", err);
+  // 드래그&드롭
+  const dz = document.getElementById('dropZone');
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file) { document.getElementById('imageInput').files = e.dataTransfer.files; previewFile(document.getElementById('imageInput')); }
+  });
 
-            }
-        }
-    </script>
+  // 분석 제출
+  document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true; btn.textContent = '⏳ AI 분석 중...';
+
+    const fd = new FormData();
+    fd.append('file', document.getElementById('imageInput').files[0]);
+
+    try {
+      const data = await (await fetch('/predict_api/', {method:'POST', body:fd})).json();
+
+      // 결과 이미지
+      document.getElementById('resultWrap').innerHTML =
+        `<img src="${data.image_url}" alt="분석 결과" style="max-width:100%;">`;
+
+      // 인식 목록
+      const list = document.getElementById('detectList');
+      list.innerHTML = '';
+      const preds = data.predictions || [];
+      const countEl = document.getElementById('detectCount');
+      countEl.textContent = preds.length + '개 인식됨';
+      countEl.style.display = '';
+
+      if (!preds.length) {
+        list.innerHTML = `<div style="text-align:center; color:var(--muted); padding:16px;">
+          인식된 물체가 없습니다.<br>
+          <span style="font-size:12px;">학습 데이터를 늘리거나 영역 지정을 더 정확히 해보세요.</span>
+        </div>`;
+        return;
+      }
+
+      preds.forEach(p => {
+        const conf = Math.round((p.confidence || 0) * 100);
+        const color = conf >= 80 ? '#10b981' : conf >= 50 ? '#f59e0b' : '#ef4444';
+        const item = document.createElement('div');
+        item.className = 'detect-item';
+        item.innerHTML = `
+          <span class="badge badge-blue" style="flex-shrink:0;">${p.class || p.cls || '-'}</span>
+          <span style="flex:1; font-weight:500;">${p.class || p.cls || '알 수 없음'}</span>
+          <div class="score-indicator">
+            <span style="font-size:13px; font-weight:600; color:${color}; min-width:38px; text-align:right;">${conf}%</span>
+            <div class="score-bar">
+              <div class="score-fill" style="width:${conf}%; background:${color};"></div>
+            </div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    } catch(err) {
+      alert('오류가 발생했습니다: ' + err.message);
+    } finally {
+      btn.disabled = false; btn.textContent = '▶ 분석 시작';
+    }
+  });
+</script>
 </body>
 </html>

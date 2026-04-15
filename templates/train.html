@@ -2,289 +2,296 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>모델 학습</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3단계 - AI 학습 실행</title>
+  <link rel="stylesheet" href="/static/base.css">
   <style>
-    .progress-container {
-      width: 80%; background: #eee; border-radius: 10px; margin: 20px 0;
-    }
-    .progress-bar {
-      height: 24px; width: 0%; background: #27ae60; border-radius: 10px;
-      text-align: center; color: white;
-    }
+    body { padding: 24px; }
 
-    .thin-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-      border: 1px solid #ccc;
+    .guide-banner {
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.06));
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 14px; padding: 18px 22px; margin-bottom: 20px;
     }
+    .guide-banner h1 { font-size:17px; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+    .step-pill { background:#3b82f6; color:#fff; font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; }
+    .guide-sub { font-size:13px; color:#475569; margin:0 0 14px; line-height:1.6; }
+    .guide-steps { display:flex; gap:10px; flex-wrap:wrap; }
+    .guide-step { flex:1; min-width:150px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:10px 13px; }
+    .guide-step-num { font-size:11px; font-weight:700; color:#60a5fa; margin-bottom:4px; }
+    .guide-step-desc { font-size:11px; color:#64748b; line-height:1.5; }
 
-    .thin-table th, .thin-table td {
-      border: 1px solid #e5e5e5;
-      padding: 6px 8px;
-      text-align: left;
+    .layout { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    .full { grid-column:1/-1; }
+
+    .dataset-table-wrap { max-height:340px; overflow-y:auto; border-radius:var(--radius-sm); border:1px solid var(--border); }
+    .table thead { position:sticky; top:0; z-index:1; }
+    .selected-row td { background:var(--selected) !important; }
+
+    /* 학습 상태 카드 */
+    .status-card { padding:18px; }
+    .stat-running { color:#34d399; font-weight:600; }
+    .stat-completed { color:#60a5fa; font-weight:600; }
+    .stat-failed { color:#f87171; font-weight:600; }
+
+    /* 단계 흐름 표시 */
+    .train-flow {
+      display:flex; align-items:center; gap:8px;
+      padding:12px 16px; background:rgba(16,185,129,0.06);
+      border:1px solid rgba(16,185,129,0.15); border-radius:10px;
+      margin-bottom:16px; flex-wrap:wrap;
     }
-
-    .thin-table th {
-      background: #f8f8f8;
-      font-weight: 600;
+    .flow-step {
+      display:flex; align-items:center; gap:6px;
+      font-size:12px; font-weight:500;
     }
-
-    .thin-table tr:hover {
-      background: #f0f7ff;
+    .flow-step .num {
+      width:22px; height:22px; border-radius:50%;
+      background:var(--accent2); color:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700;
     }
+    .flow-arrow { color:var(--muted); font-size:14px; }
 
+    .tip-box {
+      background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2);
+      border-radius:8px; padding:10px 13px; font-size:11px; color:#64748b; line-height:1.6;
+    }
+    .tip-box strong { color:#34d399; }
   </style>
-
 </head>
 <body>
-  <h2>모델 학습</h2>
-  <label for="modelSelect">모델 선택:</label>
-  <div >
-  <table class="thin-table">
-    <thead>
-      <tr>
-        <th width="5%" align="center">
-        </th>
-        <th  width="10%" height="50" align="left">유형 </th>
-        <th  width="10%" height="50" align="center">데이터셋</th>
-        <th  width="30%" height="50" align="center">상태</th>
-        <th  width="10%" height="50" align="center">생성일</th>
-        <th  width="30%" height="50" align="left">ETC</th>
-      </tr>
-    </thead>
-    <tbody id="boxTableBody">
-    </tbody>
-  </table>
+
+<!-- 단계 안내 배너 -->
+<div class="guide-banner">
+  <h1><span class="step-pill">3단계</span> 🚀 AI 학습 실행하기</h1>
+  <p class="guide-sub">
+    앞 단계에서 영역(박스)을 지정한 데이터를 바탕으로 AI가 스스로 물체를 인식하는 방법을 배웁니다.<br>
+    학습이 완료되면 <strong style="color:var(--accent);">best.pt</strong> 파일이 생성되고, 4단계에서 결과를 확인할 수 있습니다.
+  </p>
+  <div class="guide-steps">
+    <div class="guide-step">
+      <div class="guide-step-num">① 데이터셋 선택</div>
+      <div class="guide-step-desc">아래 표에서 학습시킬 동영상 작업을 체크박스로 선택합니다</div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num">② 학습 시작</div>
+      <div class="guide-step-desc">"학습 시작" 버튼 클릭 → 로그 창에서 진행 상황 확인</div>
+    </div>
+    <div class="guide-step">
+      <div class="guide-step-num" style="color:#34d399;">③ 완료 대기</div>
+      <div class="guide-step-desc">학습 시간은 데이터 양에 따라 수 분 ~ 수 시간 소요됩니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- 학습 흐름 -->
+<div class="train-flow">
+  <div class="flow-step"><div class="num">1</div> 영역 지정 데이터</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">2</div> AI 반복 학습 (에폭)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num">3</div> 최적 모델 저장 (best.pt)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-step"><div class="num" style="background:#3b82f6;">4</div> 4단계에서 테스트</div>
+</div>
+
+<div class="layout">
+
+  <!-- 데이터셋 선택 -->
+  <div class="card full">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <h2 style="margin:0;">📁 학습할 데이터셋 선택</h2>
+      <span class="badge badge-muted" id="datasetCount">로딩 중...</span>
+    </div>
+    <div class="tip-box" style="margin-bottom:12px;">
+      👆 <strong>체크박스</strong>로 학습할 작업을 하나 선택하세요.
+      "추출 수"가 0인 항목은 아직 영역이 지정되지 않아 선택할 수 없습니다.
+    </div>
+    <div class="dataset-table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th style="width:40px; text-align:center;">선택</th>
+            <th>동영상 파일명</th>
+            <th>업로드 날짜</th>
+            <th>작업 ID</th>
+            <th style="text-align:center;">장면 수</th>
+            <th style="text-align:center;">영역 지정 수</th>
+          </tr>
+        </thead>
+        <tbody id="boxTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
-  <select id="modelSelect">
-    <option value="yolo">YOLOv8n</option>
-    <option value="mask">Mask R-CNN</option>
-  </select>
-  <button onclick="start()" id="start_btn">학습 실행</button>
-  <button onclick="stop()" id="stop_btn">작업중단</button>
-  <div class="small">job_id: <input type="text" id="jobIdLabel" size = "50"/> <button onclick="status()" id="status_btn">상태조회</button></div>
-  <div id="jobInfo" class="small"></div>
-  <div class="card" id="log_view">
-    <h3>실행 상태 / 로그</h3>
-    <div id="statusBox" class="small"></div>
-    <div id ="status"></div>
-    <pre id="logBox" style="max-height:240px;overflow:auto;background:#0b0b0b;color:#e5e5e5;padding:10px;border-radius:8px"></pre>
+  <!-- 학습 실행 패널 -->
+  <div class="card status-card">
+    <h2 style="margin-bottom:14px;">⚡ 학습 실행</h2>
+
+    <div class="field" style="margin-bottom:14px;">
+      <label>AI 모델 종류</label>
+      <select id="modelSelect">
+        <option value="yolo">YOLOv8n (빠름 · 권장)</option>
+        <option value="mask">Mask R-CNN (정밀)</option>
+      </select>
+      <div class="hint">처음에는 YOLOv8n을 권장합니다.</div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:18px;">
+      <button class="btn btn-primary" id="start_btn" onclick="start()" style="flex:1; justify-content:center;">
+        ▶ 학습 시작
+      </button>
+      <button class="btn btn-danger" id="stop_btn" onclick="stop()" style="flex:1; justify-content:center;">
+        ⏹ 중단
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>현재 학습 작업 ID</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="text" id="jobIdLabel" placeholder="학습 시작 시 자동 표시됩니다" readonly style="font-size:11px; font-family:ui-monospace,monospace; color:var(--muted);">
+        <button class="btn btn-sm" onclick="statusCheck()">상태 확인</button>
+      </div>
+    </div>
+
+    <div id="statusMsg" style="margin-top:10px; font-size:13px; color:var(--text2); min-height:20px;"></div>
   </div>
 
+  <!-- 로그 -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+      <h2 style="margin:0;">📋 학습 진행 로그</h2>
+      <div style="display:flex; align-items:center; gap:6px; font-size:12px;">
+        <div class="dot-idle" id="statusDot"></div>
+        <span id="statusBox">대기 중</span>
+      </div>
+    </div>
+    <div class="tip-box" style="margin-bottom:10px; font-size:11px;">
+      학습이 시작되면 여기에 진행 상황이 실시간으로 표시됩니다.<br>
+      <strong>loss</strong> 값이 점점 줄어들면 학습이 잘 되고 있는 것입니다.
+    </div>
+    <pre class="log-box" id="logBox">학습을 시작하면 로그가 여기에 출력됩니다...</pre>
+  </div>
+
+</div>
 
 <script>
-  let currentJob = null;
-  let lastFrameId = 0;
-  let pollTimer = null;
-  const limit = 10;
-  const plimit = 5;
+  let currentJob = null, pollTimer = null;
+  const limit = 20;
   const boxTBody = document.getElementById('boxTableBody');
+  const datasetCount = document.getElementById('datasetCount');
+  const statusDot = document.getElementById('statusDot');
 
-  async function getModelList(pageNo){
-
-
-    const res = await fetch('/api/get_job_list?page='+pageNo+'&limit='+limit);
-
+  async function getModelList() {
+    const res = await fetch('/api/get_job_list?page=0&limit=' + limit);
     const arr = await res.json();
-
-    if(Array.isArray(arr) && arr.length){
-      arr.forEach(addJobItem);
+    if (!Array.isArray(arr) || !arr.length) {
+      datasetCount.textContent = '0개';
+      boxTBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px;">
+        아직 업로드된 동영상이 없습니다. <br>1~2단계에서 먼저 동영상/이미지를 업로드하세요.
+      </td></tr>`;
+      return;
     }
-
-
+    datasetCount.textContent = arr.length + '개';
+    arr.forEach(addJobItem);
   }
+  getModelList();
 
-  getModelList(0);
-
-
-  function addJobItem(item){
-
-    const tr = document.createElement("tr");
-    /* 체크박스 */
-    const tdCheck = document.createElement("td");
-    tdCheck.style.textAlign = "center";
+  function addJobItem(item) {
+    const tr = document.createElement('tr');
+    const tdCheck = document.createElement('td');
+    tdCheck.style.textAlign = 'center';
     if (item.ext_num > 0) {
-      tdCheck.innerHTML = `
-        <input type="checkbox"
-              class="row-check"
-              value="${item.job_id}_${item.ext_num}"
-              onchange="onRowCheckChange(this)">
-      `;
+      tdCheck.innerHTML = `<input type="checkbox" class="row-check" value="${item.job_id}_${item.ext_num}" onchange="onRowCheckChange(this)" style="width:16px;height:16px;accent-color:var(--accent);">`;
     } else {
-      // ext_num == 0 → 빈칸 처리
-      tdCheck.innerHTML = `-`;
+      tdCheck.innerHTML = `<span title="영역 지정된 데이터가 없습니다" style="color:var(--muted);font-size:12px;">-</span>`;
     }
-
-    // 클릭 시 프레임 보기
-    // 파일명
-    const tdName = document.createElement("td");
-    tdName.textContent = item.file_name;
-
-    // TS
-    const tdTs = document.createElement("td");
-    tdTs.textContent = item.ts;
-
-    // JOB ID
-    const tdJobId = document.createElement("td");
-    tdJobId.textContent = item.job_id;
-
-    // 프레임 수
-    const tdCount = document.createElement("td");
-    tdCount.textContent = item.total_count;
-
-    // 재추출 버튼
-    const tdExtract = document.createElement("td");
-    tdExtract.innerHTML = `
-      <button class="btn2 btn-primary" onclick="event.stopPropagation(); reExtract('${item.job_id}')">
-        재추출 [${item.ext_num}]
-      </button>
+    tr.innerHTML = `
+      <td style="text-align:center;"></td>
+      <td><span style="font-weight:500;">${item.file_name}</span></td>
+      <td style="color:var(--text2);font-size:12px;">${item.ts}</td>
+      <td style="font-family:ui-monospace,monospace;font-size:10px;color:var(--muted);">${item.job_id.slice(0,18)}...</td>
+      <td style="text-align:center;"><span class="badge badge-blue">${item.total_count}개</span></td>
+      <td style="text-align:center;">${item.ext_num > 0
+        ? `<span class="badge badge-green">${item.ext_num}개 ✓</span>`
+        : `<span class="badge badge-muted">0개 (1단계 필요)</span>`}</td>
     `;
-
-    // 삭제 버튼
-    const tdDelete = document.createElement("td");
-    tdDelete.innerHTML = `
-      <button class="btn2 btn-primary" onclick="event.stopPropagation(); deleteJob('${item.job_id}')">
-        삭제
-      </button>
-    `;
-    tr.appendChild(tdCheck);
-    tr.appendChild(tdName);
-    tr.appendChild(tdTs);
-    tr.appendChild(tdJobId);
-    tr.appendChild(tdCount);
-    tr.appendChild(tdExtract);
-    tr.appendChild(tdDelete);
+    tr.children[0].replaceWith(tdCheck);
+    tr.onclick = () => {
+      document.querySelectorAll('#boxTableBody tr').forEach(r => r.classList.remove('selected-row'));
+      tr.classList.add('selected-row');
+    };
     boxTBody.appendChild(tr);
-
   }
 
   function onRowCheckChange(current) {
-    document.querySelectorAll('.row-check').forEach(cb => {
-      if (cb !== current) cb.checked = false;
-    });
+    document.querySelectorAll('.row-check').forEach(cb => { if (cb !== current) cb.checked = false; });
   }
-  document.getElementById("checkAll").addEventListener("change", (e) => {
-    document.querySelectorAll(".row-check").forEach(cb => {
-      cb.checked = e.target.checked;
-    });
-  });
-
   function getCheckedJobId() {
-    const checked = document.querySelector('.row-check:checked');
-    return checked ? checked.value : null;
+    const c = document.querySelector('.row-check:checked');
+    return c ? c.value : null;
   }
 
+  async function start() {
+    const jobIds = getCheckedJobId();
+    if (!jobIds) { alert('학습할 데이터셋을 선택해 주세요.\n(체크박스를 클릭하세요)'); return; }
+    const [jobId, chk] = jobIds.split('_');
+    if (chk === '0') { alert('영역(박스)이 지정된 데이터가 없습니다.\n1~2단계에서 먼저 영역을 지정해 주세요.'); return; }
 
-  async function start(){
-      //alert('start')
-      document.getElementById('start_btn').disabled=true // 버튼 클릭못하게
-      const model =  document.getElementById('modelSelect').value;
-      const jobIds = getCheckedJobId();
-      if (!jobIds) {
-        alert("작업을 선택하세요.");
-        return;
-      }
-      var arr = jobIds.split("_");
-      jobId  =  arr[0];
-      chk = arr[1];
-      if(chk =="0") {
-        alert("추출된 정보가 없습니다.");
-        return;
-      }
+    document.getElementById('start_btn').disabled = true;
+    document.getElementById('statusMsg').innerHTML = `<span class="stat-running">● 학습 준비 중...</span>`;
 
-      const res = await fetch('/api/train_dataset?model='+model+'&job_id='+jobId);
-      const data = await res.json();
+    const model = document.getElementById('modelSelect').value;
+    const res = await fetch(`/api/train_dataset?model=${model}&job_id=${jobId}`);
+    const data = await res.json();
+    if (data.error) { alert('오류: ' + data.error); document.getElementById('start_btn').disabled = false; return; }
 
-      if(data.error){ alert(data.error); return; }
-      currentJob = data.job_id;
-      lastFrameId = 0;
-
-      document.getElementById('jobIdLabel').value = currentJob;
-      //document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
-      document.getElementById("status").innerText = " 모델 학습을 시작합니다...";
-
-
-      startPolling();
-  };
-
-  async function stop(){
-      //alert('start')
-      document.getElementById('start_btn').disabled=true // 버튼 클릭못하게
-
-      const res = await fetch('/api/stop/'+currentJob);
-      const data = await res.json();
-
-      if(data.error){ alert(data.error); return; }
-
-      document.getElementById('jobIdLabel').value = currentJob;
-      //document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
-      document.getElementById("status").innerText = " 중단요청 -> "+data.status;
-
-
-      startPolling();
-  };
-
-  async function status(){
-      //alert('start')
-
-
-      const res = await fetch('/api/status/'+currentJob);
-      const data = await res.json();
-
-      if(data.error){
-        document.getElementById("status").innerText = " 잡 상태 -> "+data.error;
-        return;
-      }
-
-      document.getElementById('jobIdLabel').value = currentJob;
-      //document.getElementById('jobInfo').textContent = '잡 생성: ' + currentJob;
-      document.getElementById("status").innerText = " 잡 상태 -> "+data.status;
-
-
-      startPolling();
-  };
-  function startPolling(){
-
-      if(pollTimer) clearInterval(pollTimer);
-      //alert(pollTimer)
-      pollTimer = setInterval(async ()=>{
-
-          if(!currentJob) return;
-          // 상태/로그
-          const sres = await fetch('/api/status/'+currentJob);
-          const stat = await sres.json();
-
-          if(stat.error != null){
-            alert(JSON.stringify(stat))
-            clearInterval(pollTimer);
-            document.getElementById('start_btn').disabled=false // 버튼 활성화
-            document.getElementById('statusBox').textContent=''
-            document.getElementById('logBox').textContent = ''
-            return
-          }
-          document.getElementById('statusBox').textContent = '상태: ' + stat.status + ' (pid='+(stat.pid ?? 'N/A')+', rc='+(stat.returncode ?? 'N/A')+')';
-          const lres = await fetch('/api/log/'+currentJob+'?tail=200');
-          document.getElementById('logBox').textContent = await lres.text();
-
-          if(['completed'].includes(stat.status)){
-            clearInterval(pollTimer);
-            document.getElementById('start_btn').disabled=false // 버튼 활성화
-
-          }
-
-          if(['completed','failed'].includes(stat.status)){
-            clearInterval(pollTimer);
-            document.getElementById('start_btn').disabled=false // 버튼 활성화
-            document.getElementById('statusBox').textContent=''
-            document.getElementById('logBox').textContent = ''
-
-          }
-      }, 1200);
+    currentJob = data.job_id;
+    document.getElementById('jobIdLabel').value = currentJob;
+    document.getElementById('statusMsg').innerHTML = `<span class="stat-running">● AI 학습 중... (시간이 걸릴 수 있습니다)</span>`;
+    startPolling();
   }
 
+  async function stop() {
+    if (!currentJob) return;
+    await fetch('/api/stop/' + currentJob);
+    document.getElementById('statusMsg').innerHTML = `<span class="stat-failed">⏹ 중단 요청됨</span>`;
+  }
+
+  async function statusCheck() {
+    if (!currentJob) { alert('학습을 먼저 시작해 주세요.'); return; }
+    const res = await fetch('/api/status/' + currentJob);
+    const d = await res.json();
+    document.getElementById('statusMsg').textContent = '현재 상태: ' + (d.status || d.error);
+  }
+
+  function setDot(s) { statusDot.className = s === 'running' ? 'dot-running' : s === 'error' ? 'dot-error' : 'dot-idle'; }
+
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    setDot('running');
+    pollTimer = setInterval(async () => {
+      if (!currentJob) return;
+      const stat = await (await fetch('/api/status/' + currentJob)).json();
+      if (stat.error) { clearInterval(pollTimer); setDot('error'); return; }
+      document.getElementById('statusBox').textContent = stat.status + (stat.pid ? ` (pid=${stat.pid})` : '');
+      document.getElementById('logBox').textContent = await (await fetch(`/api/log/${currentJob}?tail=200`)).text();
+
+      if (stat.status === 'completed') {
+        clearInterval(pollTimer); setDot('idle');
+        document.getElementById('start_btn').disabled = false;
+        document.getElementById('statusMsg').innerHTML = `<span class="stat-completed">✅ 학습 완료! 4단계(결과 확인)로 이동하세요.</span>`;
+      }
+      if (['failed','stopping'].includes(stat.status)) {
+        clearInterval(pollTimer); setDot('error');
+        document.getElementById('start_btn').disabled = false;
+        document.getElementById('statusMsg').innerHTML = `<span class="stat-failed">✗ 학습 실패 / 중단됨</span>`;
+      }
+    }, 1200);
+  }
 </script>
-
 </body>
 </html>
